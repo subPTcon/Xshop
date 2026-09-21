@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: xshop-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d   # 容器首次启动时自动执行这里的 .sql 脚本
+    command:
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: xshop-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass redis123456
+
+  nacos:
+    image: nacos/nacos-server:v2.5.2
+    container_name: xshop-nacos
+    restart: always
+    environment:
+      MODE: standalone       # 单机模式，开发够用，不用搭集群
+      JVM_XMS: 256m
+      JVM_XMX: 256m
+    ports:
+      - "8848:8848"          # 控制台 & 服务发现端口
+      - "9848:9848"          # 2.x 版本 gRPC 端口，必须开，不开客户端注册会报错
+
+volumes:
+  mysql-data:
