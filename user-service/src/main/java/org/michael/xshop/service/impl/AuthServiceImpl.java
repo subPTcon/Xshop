@@ -2,6 +2,8 @@ package org.michael.xshop.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
+import org.michael.xshop.common.exception.BusinessException;
+import org.michael.xshop.common.exception.ErrorCode;
 import org.michael.xshop.dto.RegisterRequest;
 import org.michael.xshop.mapper.UserMapper;
 import org.michael.xshop.pojo.User;
@@ -28,8 +30,8 @@ public class AuthServiceImpl implements AuthService {
         String password = request.getPassword();
 
         if (password.getBytes(StandardCharsets.UTF_8).length > 72) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+            throw new BusinessException(
+                    ErrorCode.PARAM_INVALID,
                     "密码的UTF-8编码长度不能超过72个字节"
             );
         }
@@ -39,10 +41,7 @@ public class AuthServiceImpl implements AuthService {
         );
 
         if (usernameCount > 0) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "用户名已存在"
-            );
+            throw new BusinessException(ErrorCode.USERNAME_EXISTS);
         }
 
         Long phoneCount = userMapper.selectCount(
@@ -50,10 +49,7 @@ public class AuthServiceImpl implements AuthService {
         );
 
         if (phoneCount > 0) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "手机号已注册"
-            );
+            throw new BusinessException(ErrorCode.PHONE_EXISTS);
         }
 
         User user = new User();
@@ -65,11 +61,7 @@ public class AuthServiceImpl implements AuthService {
         try {
             userMapper.insert(user);
         } catch (DuplicateKeyException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "用户名或手机号已存在",
-                    e
-            );
+            throw new BusinessException(ErrorCode.REGISTER_CONFLICT);
         }
 
         return user.getId();
