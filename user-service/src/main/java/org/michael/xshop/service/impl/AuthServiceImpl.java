@@ -1,20 +1,24 @@
 package org.michael.xshop.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import org.michael.xshop.common.exception.BusinessException;
 import org.michael.xshop.common.exception.ErrorCode;
+import org.michael.xshop.dto.LoginRequest;
+import org.michael.xshop.dto.LoginResponse;
 import org.michael.xshop.dto.RegisterRequest;
 import org.michael.xshop.mapper.UserMapper;
 import org.michael.xshop.pojo.User;
 import org.michael.xshop.service.AuthService;
+import org.michael.xshop.util.JwtUtil;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +26,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     @Override
     public Long register(RegisterRequest request) {
@@ -65,5 +70,29 @@ public class AuthServiceImpl implements AuthService {
         }
 
         return user.getId();
+    }
+
+    @Override
+    public LoginResponse login(LoginRequest request) {
+        User user = userMapper.selectOne(
+                new LambdaQueryWrapper<User>().eq(User::getUsername, request.getUsername())
+        );
+
+        if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BusinessException(ErrorCode.LOGIN_FAILED);
+        }
+
+        if (user.getStatus() == 0) {
+            throw new BusinessException(ErrorCode.ACCOUNT_DISABLED);
+        }
+
+        String token = jwtUtil.generateToken(user.getId(), user.getUsername());
+
+        LoginResponse response = new LoginResponse();
+        response.setToken(token);
+        response.setExpireIn(jwtUtil.getExpireSeconds());
+        response.setUserId(user.getId());
+
+        return response;
     }
 }

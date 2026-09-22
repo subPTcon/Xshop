@@ -26,3 +26,6 @@ mybatis:
   mapper-locations: classpath:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
+
+jwt:
+  secret: xshop-jwt-secret-key-michael-2026-very-secure-key
