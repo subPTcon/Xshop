@@ -13,20 +13,25 @@ import org.michael.xshop.pojo.User;
 import org.michael.xshop.service.AuthService;
 import org.michael.xshop.util.JwtUtil;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
+    private static final int MAX_LOGIN_FAIL_COUNT = 5;
+    private static final Duration LOGIN_FAIL_EXPIRE = Duration.ofMinutes(10);
+    private static final Duration TOKEN_EXPIRE = Duration.ofHours(2);
+
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final StringRedisTemplate redisTemplate;
 
     @Override
     public Long register(RegisterRequest request) {
@@ -74,25 +79,63 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse login(LoginRequest request) {
+        String username = request.getUsername();
+        String password = request.getPassword();
+
+        String failKey = "login:fail:" + username;
+
+        // 1.检查当前账号失败次数
+        String failCountStr = redisTemplate.opsForValue().get(failKey);
+
+        if (failCountStr != null && Integer.parseInt(failCountStr) >= MAX_LOGIN_FAIL_COUNT) {
+            throw new BusinessException(ErrorCode.LOGIN_TOO_MANY_ATTEMPTS);
+        }
+
+        // 2.查询用户
         User user = userMapper.selectOne(
                 new LambdaQueryWrapper<User>().eq(User::getUsername, request.getUsername())
         );
 
+        // 3.用户不存在/密码错误
         if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            recordLoginFailure(failKey);
             throw new BusinessException(ErrorCode.LOGIN_FAILED);
         }
 
+        // 4.检查账号状态
         if (user.getStatus() == 0) {
             throw new BusinessException(ErrorCode.ACCOUNT_DISABLED);
         }
 
+        // 5.登录成功，清除失败次数
+        redisTemplate.delete(failKey);
+
+        // 6.生成JWT
         String token = jwtUtil.generateToken(user.getId(), user.getUsername());
 
+        // 7.保存登录态
+        String tokenKey = "token:" + token;
+
+        redisTemplate.opsForValue().set(
+                tokenKey,
+                String.valueOf(user.getId()),
+                TOKEN_EXPIRE
+        );
+
+        // 8.返回
         LoginResponse response = new LoginResponse();
         response.setToken(token);
         response.setExpireIn(jwtUtil.getExpireSeconds());
         response.setUserId(user.getId());
 
         return response;
+    }
+
+    private void recordLoginFailure(String failKey) {
+        Long count = redisTemplate.opsForValue().increment(failKey);
+
+        if (count != null && count == 1) {
+            redisTemplate.expire(failKey, LOGIN_FAIL_EXPIRE);
+        }
     }
 }

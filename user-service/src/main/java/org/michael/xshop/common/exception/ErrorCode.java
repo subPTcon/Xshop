@@ -17,6 +17,7 @@ public enum ErrorCode {
     TOKEN_INVALID(40102, "无效的登录凭证"),
     LOGIN_FAILED(40103, "用户名或密码错误"),
     ACCOUNT_DISABLED(40104, "账号已被禁用，请联系客服"),
+    LOGIN_TOO_MANY_ATTEMPTS(40105, "登录失败次数过多，请稍后重试"),
 
     // 403xx 权限类
     FORBIDDEN(40300, "无权限执行该操作"),

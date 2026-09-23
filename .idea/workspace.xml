@@ -5,10 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f83472c5-673d-4ca7-8997-ba143d7af52b" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/user-service/src/main/java/org/michael/xshop/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/java/org/michael/xshop/controller/AuthController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/src/main/java/org/michael/xshop/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/java/org/michael/xshop/service/AuthService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-service/src/main/java/org/michael/xshop/common/exception/ErrorCode.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/java/org/michael/xshop/common/exception/ErrorCode.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/user-service/src/main/java/org/michael/xshop/service/impl/AuthServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/java/org/michael/xshop/service/impl/AuthServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/resources/application.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
