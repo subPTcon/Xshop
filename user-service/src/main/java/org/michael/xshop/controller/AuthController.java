@@ -8,10 +8,7 @@ import org.michael.xshop.dto.LoginRequest;
 import org.michael.xshop.dto.LoginResponse;
 import org.michael.xshop.dto.RegisterRequest;
 import org.michael.xshop.service.AuthService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -34,5 +31,11 @@ public class AuthController {
     public Result<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         log.info("POST /auth/login 请求时间：{}", LocalDateTime.now());
         return Result.ok(authService.login(request));
+    }
+
+    @PostMapping("/logout")
+    public Result<Void> logout(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        authService.logout(authorization);
+        return Result.ok();
     }
 }

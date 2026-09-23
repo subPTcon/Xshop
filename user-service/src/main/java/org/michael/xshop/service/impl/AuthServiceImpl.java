@@ -3,6 +3,7 @@ package org.michael.xshop.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.michael.xshop.common.exception.BusinessException;
 import org.michael.xshop.common.exception.ErrorCode;
 import org.michael.xshop.dto.LoginRequest;
@@ -16,10 +17,12 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -27,6 +30,7 @@ public class AuthServiceImpl implements AuthService {
     private static final int MAX_LOGIN_FAIL_COUNT = 5;
     private static final Duration LOGIN_FAIL_EXPIRE = Duration.ofMinutes(10);
     private static final Duration TOKEN_EXPIRE = Duration.ofHours(2);
+    private static final String BEARER_PREFIX = "Bearer ";
 
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
@@ -137,5 +141,35 @@ public class AuthServiceImpl implements AuthService {
         if (count != null && count == 1) {
             redisTemplate.expire(failKey, LOGIN_FAIL_EXPIRE);
         }
+    }
+
+    @Override
+    public void logout(String rawAuthorizationHeader) {
+        String token = extractToken(rawAuthorizationHeader);
+        // 没带token或格式不对，直接当成已经是登出状态，不报错一登出接口的语义就是“确保这个token失效”
+        // 一个本来就没有效token的请求，结果也是“已失效"，没必要额外报UNAUTHORIZED打断调用方
+        if (token == null) {
+            return;
+        }
+
+        Boolean deleted = redisTemplate.delete(token);
+        log.info("用户登出，tokenPrefix={}..., redisKeyDeleted={}", token.length() > 8 ? token.substring(0, 8) : token, deleted);
+    }
+
+    /**
+     * 从 Authorization 请求头里提取真正的token值，兼容带"Bearer " 前缀和不带前缀两种情况
+     *
+     * 返回null代表这个请求头本身就是无效/缺失的
+     */
+    private String extractToken(String rawAuthorizationHeader) {
+        if (!StringUtils.hasText(rawAuthorizationHeader)) {
+            return null;
+        }
+
+        if (rawAuthorizationHeader.startsWith(BEARER_PREFIX)) {
+            return rawAuthorizationHeader.substring(BEARER_PREFIX.length()).trim();
+        }
+
+        return rawAuthorizationHeader.trim();
     }
 }
