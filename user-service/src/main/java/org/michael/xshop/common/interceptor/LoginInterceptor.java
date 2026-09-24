@@ -27,12 +27,14 @@ public class LoginInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String token = extractToken(request.getHeader("Authorization"));
+        System.out.println("TOKEN: " + token);
 
         if (token == null) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
-        String userIdStr = redisTemplate.opsForValue().get(token);
+        String userIdStr = redisTemplate.opsForValue().get("token:" + token);
+        System.out.println("userIdStr:" + userIdStr);
         if (userIdStr == null) {
             // Redis里查不到：要么token从没登录过，要么已经登出/自然过期，统一按同一种错误提示
             // 不区分“过期”和“无效”两种情况

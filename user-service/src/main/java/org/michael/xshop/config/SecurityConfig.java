@@ -16,7 +16,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/register",
                                 "/auth/login",
-                                "/users/me"
+                                "/users/me",
+                                "/internal/users/{id}"
                                 ).permitAll() // 放行这两个接口
                         .anyRequest().authenticated()
                 )

@@ -18,7 +18,8 @@ public class WebMvcConfigurer implements org.springframework.web.servlet.config.
                 .excludePathPatterns(
                         "/auth/register",
                         "/auth/login",
-                        "/auth/logout"
+                        "/auth/logout",
+                        "/internal/**"
                 );
     }
 }
