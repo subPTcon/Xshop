@@ -14,7 +14,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register", "/auth/login").permitAll() // 放行这两个接口
+                        .requestMatchers("/auth/register",
+                                "/auth/login",
+                                "/users/me"
+                                ).permitAll() // 放行这两个接口
                         .anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf.disable()); // 如果是前后端分离项目，通常需要禁用
