@@ -37,4 +37,12 @@ public class AddressController {
         return Result.ok(new AddAddressResponse(addressId));
     }
 
+    @PutMapping("/update/{id}")
+    public Result<Void> updateAddress(@PathVariable Long id, @Valid @RequestBody AddAddressRequest request) {
+        log.info("POST /addresses/{id} id={}, 时间:{}", id, LocalDateTime.now());
+        Long userId = UserContext.getUserId();
+        addressService.updateAddress(userId, id, request);
+        return Result.ok();
+    }
+
 }

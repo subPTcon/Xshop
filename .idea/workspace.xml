@@ -5,9 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f83472c5-673d-4ca7-8997-ba143d7af52b" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/0059de03-3aa2-41e9-963e-30db8db8ecbc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/0059de03-3aa2-41e9-963e-30db8db8ecbc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/4f3c4aa7-7aa0-4936-8276-9e6b696c21d2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/4f3c4aa7-7aa0-4936-8276-9e6b696c21d2.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/user-service/src/main/java/org/michael/xshop/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/java/org/michael/xshop/config/SecurityConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/user-service/src/main/java/org/michael/xshop/controller/AddressController.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/java/org/michael/xshop/controller/AddressController.java" afterDir="false" />
@@ -138,7 +135,7 @@
       <workItem from="1790222831242" duration="190000" />
       <workItem from="1790223030161" duration="5339000" />
       <workItem from="1790264063013" duration="2625000" />
-      <workItem from="1790334257562" duration="1568000" />
+      <workItem from="1790334257562" duration="2942000" />
     </task>
     <servers />
   </component>
