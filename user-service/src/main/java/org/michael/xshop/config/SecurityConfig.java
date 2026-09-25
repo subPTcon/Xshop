@@ -17,7 +17,9 @@ public class SecurityConfig {
                         .requestMatchers("/auth/register",
                                 "/auth/login",
                                 "/users/me",
-                                "/internal/users/{id}"
+                                "/internal/users/{id}",
+                                "/addresses/add",
+                                "/addresses/list"
                                 ).permitAll() // 放行这两个接口
                         .anyRequest().authenticated()
                 )

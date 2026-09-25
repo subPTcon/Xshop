@@ -1,5 +1,6 @@
 package org.michael.xshop.service;
 
+import org.michael.xshop.dto.AddAddressRequest;
 import org.michael.xshop.dto.AddressResponse;
 
 import java.util.List;
@@ -11,4 +12,9 @@ public interface AddressService {
      */
     List<AddressResponse> listAddresses(Long userId);
 
+    /**
+     * 新增收货地址，返回新地址的id
+     * 如果 request 里 isDefault = true，会先把该用户名下其他地址的默认标记清掉，保证同一用户永远只有一个默认地址
+     */
+    Long addAddress(Long userId, AddAddressRequest request);
 }
