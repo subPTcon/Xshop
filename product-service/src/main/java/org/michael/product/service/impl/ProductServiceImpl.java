@@ -1,8 +1,12 @@
 package org.michael.product.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
+import org.michael.common.exception.BusinessException;
+import org.michael.common.exception.ErrorCode;
 import org.michael.product.dto.ProductCreateDTO;
 import org.michael.product.dto.SkuCreateDTO;
+import org.michael.product.mapper.CategoryMapper;
 import org.michael.product.mapper.ProductMapper;
 import org.michael.product.mapper.SkuMapper;
 import org.michael.product.pojo.Product;
@@ -11,16 +15,22 @@ import org.michael.product.service.ProductService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
     private final ProductMapper productMapper;
     private final SkuMapper skuMapper;
+    private final CategoryMapper categoryMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long addProduct(ProductCreateDTO dto) {
+        validateProductCreate(dto);
+
         Product product = new Product();
 
         product.setCategoryId(dto.getCategoryId());
@@ -28,27 +38,53 @@ public class ProductServiceImpl implements ProductService {
         product.setDetailHtml(dto.getDetailHtml());
         product.setStatus(1);
         product.setSaleCount(0);
+
         productMapper.insert(product);
 
-        // MyBatis-Plus 插入后会自动回填主键
         Long productId = product.getId();
 
-        if (dto.getSkus() != null && !dto.getSkus().isEmpty()) {
-            for (SkuCreateDTO skuDTO: dto.getSkus()) {
-                Sku sku = new Sku();
+        for (SkuCreateDTO skuDTO : dto.getSkus()) {
 
-                sku.setProductId(productId);
-                sku.setSkuCode(skuDTO.getSkuCode());
-                sku.setSpecJson(skuDTO.getSpecJson());
-                sku.setPrice(skuDTO.getPrice());
-                sku.setImage(skuDTO.getImage());
+            Sku sku = new Sku();
 
-                sku.setStatus(1);
+            sku.setProductId(productId);
+            sku.setSkuCode(skuDTO.getSkuCode());
+            sku.setSpecJson(skuDTO.getSpecJson());
+            sku.setPrice(skuDTO.getPrice());
+            sku.setImage(skuDTO.getImage());
+            sku.setStatus(1);
 
-                skuMapper.insert(sku);
-            }
+            skuMapper.insert(sku);
         }
 
         return productId;
+    }
+
+    private void validateProductCreate(ProductCreateDTO dto) {
+
+        // 分类是否存在
+        if (categoryMapper.selectById(dto.getCategoryId()) == null) {
+            throw new BusinessException(ErrorCode.CATEGORY_NOT_FOUND);
+        }
+
+        List<String> skuCodes = dto.getSkus()
+                .stream()
+                .map(SkuCreateDTO::getSkuCode)
+                .toList();
+
+        // 请求内部是否重复
+        if (new HashSet<>(skuCodes).size() != skuCodes.size()) {
+            throw new BusinessException(ErrorCode.SKU_CODE_EXISTS);
+        }
+
+        // 数据库是否已经存在
+        Long count = skuMapper.selectCount(
+                new LambdaQueryWrapper<Sku>()
+                        .in(Sku::getSkuCode, skuCodes)
+        );
+
+        if (count > 0) {
+            throw new BusinessException(ErrorCode.SKU_CODE_EXISTS);
+        }
     }
 }

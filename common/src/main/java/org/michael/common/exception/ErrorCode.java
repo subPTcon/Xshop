@@ -26,6 +26,9 @@ public enum ErrorCode {
     // 404xx 资源不存在类
     USER_NOT_FOUND(40400, "用户不存在"),
     ADDRESS_NOT_FOUND(40401, "收货地址不存在"),
+    PRODUCT_NOT_FOUND(40410, "商品不存在"),
+    SKU_NOT_FOUND(40411, "SKU不存在"),
+    CATEGORY_NOT_FOUND(40412, "商品分类不存在"),
 
     // 409xx 业务冲突类
     USERNAME_EXISTS(40900, "该用户名已被注册"),
@@ -33,6 +36,8 @@ public enum ErrorCode {
     EMAIL_EXISTS(40902, "该邮箱已被注册"),
     OLD_PASSWORD_INCORRECT(40903, "原密码不正确"),
     REGISTER_CONFLICT(40904, "注册失败，用户名或手机号已被占用，请重试"),
+    SKU_CODE_EXISTS(40910, "SKU编码已存在"),
+    PRODUCT_CREATE_CONFLICT(40911, "商品创建失败，请重试"),
 
     // 500xx 系统错误类
     SYSTEM_ERROR(50000, "系统繁忙，请稍后重试"),

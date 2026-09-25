@@ -16,7 +16,6 @@
         <relativePath/>
     </parent>
     <modules>
-        <module>order-service</module>
         <module>user-service</module>
         <module>product-service</module>
         <module>common</module>
