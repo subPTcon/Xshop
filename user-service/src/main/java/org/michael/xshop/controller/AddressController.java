@@ -39,10 +39,17 @@ public class AddressController {
 
     @PutMapping("/update/{id}")
     public Result<Void> updateAddress(@PathVariable Long id, @Valid @RequestBody AddAddressRequest request) {
-        log.info("POST /addresses/{id} id={}, 时间:{}", id, LocalDateTime.now());
+        log.info("POST /addresses/update/{id} id={}, 时间:{}", id, LocalDateTime.now());
         Long userId = UserContext.getUserId();
         addressService.updateAddress(userId, id, request);
         return Result.ok();
     }
 
+    @DeleteMapping("/delete/{id}")
+    public Result<Void> deleteAddress(@PathVariable Long id) {
+        log.info("DELETE /addresses/delete/{id} id={}, 时间:{}", id, LocalDateTime.now());
+        Long userId = UserContext.getUserId();
+        addressService.deleteAddress(userId, id);
+        return Result.ok();
+    }
 }

@@ -23,4 +23,9 @@ public interface AddressService {
      * 防止用户A传别人的addressId改到别人的地址上（越权修改）
      */
     void updateAddress(Long userId, Long addressId, AddAddressRequest request);
+
+    /**
+     * 删除收货地址。同样会校验归属关系，防止越权删除他人地址
+     */
+    void deleteAddress(Long userId, Long addressId);
 }

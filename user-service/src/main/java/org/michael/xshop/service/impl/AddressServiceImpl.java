@@ -105,7 +105,24 @@ public class AddressServiceImpl implements AddressService {
 
         addressMapper.updateById(existing);
     }
-    
+
+    @Override
+    public void deleteAddress(Long userId, Long addressId) {
+        Address existing = addressMapper.selectById(addressId);
+
+        // 删除接口对"不存在"做幂等处理：如果这条地址已经不存在了（比如用户手快连点两次删除），
+        // 直接当成功返回，而不是报ADDRESS_NOT_FOUND——最终状态是一致的("这条地址不存在")
+        if (existing == null) {
+            return;
+        }
+
+        // 但如果地址存在、只是不属于当前用户，必须严格拒绝，这是越权删除的红线，不能做成"静默跳过"
+        if (!existing.getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.ADDRESS_NOT_OWNED);
+        }
+
+        addressMapper.deleteById(addressId);
+    }
 
     private AddressResponse toResponse(Address address) {
         AddressResponse response = new AddressResponse();
