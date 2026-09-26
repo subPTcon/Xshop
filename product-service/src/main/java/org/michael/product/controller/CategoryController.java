@@ -7,9 +7,11 @@ import org.michael.common.result.Result;
 import org.michael.product.dto.CategorySaveDTO;
 import org.michael.product.service.CategoryService;
 import org.michael.product.vo.CategoryCreateVO;
+import org.michael.product.vo.CategoryTreeVO;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -41,5 +43,12 @@ public class CategoryController {
         log.info("DELETE /categories/delete/{id} id={}, 时间:{}", id, LocalDateTime.now());
         categoryService.deleteCategory(id);
         return Result.ok(true);
+    }
+
+    @GetMapping("/tree")
+    public Result<List<CategoryTreeVO>> getCategoryTree() {
+        log.info("GET /categories/tree 时间:{}", LocalDateTime.now());
+        List<CategoryTreeVO> tree = categoryService.getCategoryTree();
+        return Result.ok(tree);
     }
 }

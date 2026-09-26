@@ -10,7 +10,13 @@ import org.michael.product.mapper.ProductMapper;
 import org.michael.product.pojo.Category;
 import org.michael.product.pojo.Product;
 import org.michael.product.service.CategoryService;
+import org.michael.product.vo.CategoryTreeVO;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -98,6 +104,43 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         categoryMapper.deleteById(id);
+    }
+
+    @Override
+    public List<CategoryTreeVO> getCategoryTree() {
+        // 1.一次性查询全部类目
+        List<Category> categories = categoryMapper.selectList(
+                new LambdaQueryWrapper<Category>()
+                        .orderByAsc(Category::getSortOrder)
+                        .orderByAsc(Category::getId)
+        );
+        if (categories.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 2.按 parentId 分组
+        Map<Long, List<Category>> categoryMap = categories.stream().collect(Collectors.groupingBy(Category::getParentId));
+
+        return buildTree(0L, categoryMap);
+    }
+
+    private List<CategoryTreeVO> buildTree(Long parentId, Map<Long, List<Category>> categoryMap) {
+        List<Category> children = categoryMap.get(parentId);
+        if (children == null || children.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return children.stream()
+                .map(category -> {
+                    CategoryTreeVO vo = new CategoryTreeVO();
+
+                    vo.setId(category.getId());
+                    vo.setName(category.getName());
+
+                    vo.setChildren(buildTree(category.getId(), categoryMap));
+
+                    return vo;
+                }).toList();
     }
 
     private boolean isDescendant(Long currentId, Long targetParentId) {
