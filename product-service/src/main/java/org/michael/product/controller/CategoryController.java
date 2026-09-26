@@ -35,4 +35,11 @@ public class CategoryController {
         categoryService.updateCategory(id, dto);
         return Result.ok(true);
     }
+
+    @DeleteMapping("/delete/{id}")
+    public Result<Boolean> deleteCategory(@PathVariable Long id) {
+        log.info("DELETE /categories/delete/{id} id={}, 时间:{}", id, LocalDateTime.now());
+        categoryService.deleteCategory(id);
+        return Result.ok(true);
+    }
 }

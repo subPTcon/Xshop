@@ -5,10 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f83472c5-673d-4ca7-8997-ba143d7af52b" name="更改" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/9a17a175-a17a-452b-adc0-f0b6976a69cb.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/9a17a175-a17a-452b-adc0-f0b6976a69cb.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/common/src/main/java/org/michael/common/exception/ErrorCode.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/org/michael/common/exception/ErrorCode.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/product-service/src/main/java/org/michael/product/controller/CategoryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/main/java/org/michael/product/controller/CategoryController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/product-service/src/main/java/org/michael/product/dto/CategoryCreateDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/main/java/org/michael/product/dto/CategorySaveDTO.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/product-service/src/main/java/org/michael/product/service/CategoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/main/java/org/michael/product/service/CategoryService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/product-service/src/main/java/org/michael/product/service/impl/CategoryServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/main/java/org/michael/product/service/impl/CategoryServiceImpl.java" afterDir="false" />
     </list>
@@ -154,7 +155,7 @@
       <workItem from="1790334257562" duration="8191000" />
       <workItem from="1790344873361" duration="2481000" />
       <workItem from="1790347364632" duration="3937000" />
-      <workItem from="1790416192716" duration="1341000" />
+      <workItem from="1790416192716" duration="2216000" />
     </task>
     <servers />
   </component>

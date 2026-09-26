@@ -39,6 +39,8 @@ public enum ErrorCode {
     SKU_CODE_EXISTS(40910, "SKU编码已存在"),
     PRODUCT_CREATE_CONFLICT(40911, "商品创建失败，请重试"),
     CATEGORY_PARENT_INVALID(40912, "类目父级设置不合法"),
+    CATEGORY_HAS_CHILDREN(40913, "该类目下存在子类目，无法删除"),
+    CATEGORY_HAS_PRODUCTS(40914, "该类目下存在商品，无法删除"),
 
     // 500xx 系统错误类
     SYSTEM_ERROR(50000, "系统繁忙，请稍后重试"),
