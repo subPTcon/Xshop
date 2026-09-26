@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class CategoryCreateDTO {
+public class CategorySaveDTO {
 
     @NotNull(message = "父类目ID不能为空")
     @Min(value = 0, message = "父类目ID不能小于0")

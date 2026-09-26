@@ -38,6 +38,7 @@ public enum ErrorCode {
     REGISTER_CONFLICT(40904, "注册失败，用户名或手机号已被占用，请重试"),
     SKU_CODE_EXISTS(40910, "SKU编码已存在"),
     PRODUCT_CREATE_CONFLICT(40911, "商品创建失败，请重试"),
+    CATEGORY_PARENT_INVALID(40912, "类目父级设置不合法"),
 
     // 500xx 系统错误类
     SYSTEM_ERROR(50000, "系统繁忙，请稍后重试"),
