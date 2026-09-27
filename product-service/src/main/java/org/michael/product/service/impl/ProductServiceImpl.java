@@ -12,6 +12,7 @@ import org.michael.product.mapper.SkuMapper;
 import org.michael.product.pojo.Product;
 import org.michael.product.pojo.Sku;
 import org.michael.product.service.ProductService;
+import org.michael.product.vo.ProductSkuVO;
 import org.michael.product.vo.SkuDetailVO;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -82,6 +83,34 @@ public class ProductServiceImpl implements ProductService {
         vo.setStatus(sku.getStatus());
 
         return vo;
+    }
+
+    @Override
+    public List<ProductSkuVO> getProductSkus(Long productId) {
+        // 1.先校验商品是否存在
+        Product product = productMapper.selectById(productId);
+
+        if (product == null) {
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+
+        // 2.查询该商品下所有 SKU
+        List<Sku> skus = skuMapper.selectList(
+                new LambdaQueryWrapper<Sku>()
+                        .eq(Sku::getProductId, productId)
+                        .orderByAsc(Sku::getId)
+        );
+
+        return skus.stream()
+                .map(sku -> {
+                    ProductSkuVO vo = new ProductSkuVO();
+
+                    vo.setSkuId(sku.getId());
+                    vo.setPrice(sku.getPrice());
+                    vo.setSpecJson(sku.getSpecJson());
+
+                    return vo;
+                }).toList();
     }
 
     private void validateProductCreate(ProductCreateDTO dto) {

@@ -1,7 +1,10 @@
 package org.michael.product.service;
 
 import org.michael.product.dto.ProductCreateDTO;
+import org.michael.product.vo.ProductSkuVO;
 import org.michael.product.vo.SkuDetailVO;
+
+import java.util.List;
 
 public interface ProductService {
 
@@ -14,4 +17,6 @@ public interface ProductService {
     Long addProduct(ProductCreateDTO dto);
 
     SkuDetailVO getSkuById(Long skuId);
+
+    List<ProductSkuVO> getProductSkus(Long productId);
 }
