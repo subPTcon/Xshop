@@ -8,6 +8,7 @@ import org.michael.product.dto.ProductCreateDTO;
 import org.michael.product.service.ProductService;
 import org.michael.product.vo.ProductCreateVO;
 import org.michael.common.result.Result;
+import org.michael.product.vo.ProductDetailVO;
 import org.michael.product.vo.ProductSkuVO;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,5 +35,16 @@ public class ProductController {
         log.info("GET /product/{id}/skus id={}, 时间:{}", id, LocalDateTime.now());
         List<ProductSkuVO> skus = productService.getProductSkus(id);
         return Result.ok(skus);
+    }
+
+    @GetMapping("/get/{id}")
+    public Result<ProductDetailVO> getProductDetail(
+            @PathVariable
+            @Min(value = 1, message = "商品ID必须大于0")
+            Long id
+    ) {
+        log.info("GET /products/get/{id} id={}, 时间:{}", id, LocalDateTime.now());
+        ProductDetailVO detail = productService.getProductDetail(id);
+        return Result.ok(detail);
     }
 }

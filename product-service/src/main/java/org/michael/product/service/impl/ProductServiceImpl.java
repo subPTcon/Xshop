@@ -12,6 +12,8 @@ import org.michael.product.mapper.SkuMapper;
 import org.michael.product.pojo.Product;
 import org.michael.product.pojo.Sku;
 import org.michael.product.service.ProductService;
+import org.michael.product.vo.ProductDetailSkuVO;
+import org.michael.product.vo.ProductDetailVO;
 import org.michael.product.vo.ProductSkuVO;
 import org.michael.product.vo.SkuDetailVO;
 import org.springframework.dao.DuplicateKeyException;
@@ -111,6 +113,46 @@ public class ProductServiceImpl implements ProductService {
 
                     return vo;
                 }).toList();
+    }
+
+    @Override
+    public ProductDetailVO getProductDetail(Long productId) {
+        // 1.查询商品
+        Product product = productMapper.selectById(productId);
+
+        if (product == null) {
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+
+        // 2.查询商品下所有 SKU
+        List<Sku> skus = skuMapper.selectList(
+                new LambdaQueryWrapper<Sku>()
+                        .eq(Sku::getProductId, productId)
+                        .orderByAsc(Sku::getId)
+        );
+
+        // 3.转换SKU
+        List<ProductDetailSkuVO> skuVOList = skus.stream()
+                .map(sku -> {
+                    ProductDetailSkuVO vo = new ProductDetailSkuVO();
+
+                    vo.setId(sku.getId());
+                    vo.setSpecJson(sku.getSpecJson());
+                    vo.setPrice(sku.getPrice());
+
+                    vo.setStock(null);
+
+                    return vo;
+                }).toList();
+
+        // 4.组装商品详情
+        ProductDetailVO vo = new ProductDetailVO();
+        vo.setId(product.getId());
+        vo.setTitle(product.getTitle());
+        vo.setDetailHtml(product.getDetailHtml());
+        vo.setSkus(skuVOList);
+
+        return vo;
     }
 
     private void validateProductCreate(ProductCreateDTO dto) {

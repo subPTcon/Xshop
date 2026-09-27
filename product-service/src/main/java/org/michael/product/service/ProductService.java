@@ -1,6 +1,7 @@
 package org.michael.product.service;
 
 import org.michael.product.dto.ProductCreateDTO;
+import org.michael.product.vo.ProductDetailVO;
 import org.michael.product.vo.ProductSkuVO;
 import org.michael.product.vo.SkuDetailVO;
 
@@ -19,4 +20,6 @@ public interface ProductService {
     SkuDetailVO getSkuById(Long skuId);
 
     List<ProductSkuVO> getProductSkus(Long productId);
+
+    ProductDetailVO getProductDetail(Long productId);
 }
