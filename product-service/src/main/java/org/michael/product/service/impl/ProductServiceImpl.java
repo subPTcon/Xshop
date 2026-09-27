@@ -225,6 +225,19 @@ public class ProductServiceImpl implements ProductService {
         return new ProductPageVO(list, productPage.getTotal());
     }
 
+    @Override
+    public void updateProductStatus(Long id, Integer status) {
+        Product product = productMapper.selectById(id);
+
+        if (product == null) {
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+
+        product.setStatus(status);
+
+        productMapper.updateById(product);
+    }
+
     private void validateProductCreate(ProductCreateDTO dto) {
 
         // 分类是否存在

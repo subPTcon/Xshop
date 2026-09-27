@@ -20,4 +20,6 @@ public interface ProductService {
     ProductDetailVO getProductDetail(Long productId);
 
     ProductPageVO getProductList(ProductListQueryDTO query);
+
+    void updateProductStatus(Long id, Integer status);
 }

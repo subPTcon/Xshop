@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.michael.product.dto.ProductCreateDTO;
 import org.michael.product.dto.ProductListQueryDTO;
+import org.michael.product.dto.ProductStatusUpdateDTO;
 import org.michael.product.service.ProductService;
 import org.michael.product.vo.ProductCreateVO;
 import org.michael.common.result.Result;
@@ -56,4 +57,17 @@ public class ProductController {
         ProductPageVO result = productService.getProductList(query);
         return Result.ok(result);
     }
+
+    @PutMapping("/updateStatus/{id}")
+    public Result<Boolean> updateProductStatus(
+            @PathVariable @Min(value = 1, message = "商品ID必须大于0")
+            Long id,
+            @Valid @RequestBody
+            ProductStatusUpdateDTO dto
+    ) {
+        log.info("/PUT /products/updateStatus/{id}, id={}, dto={}, 时间:{}", id, dto, LocalDateTime.now());
+        productService.updateProductStatus(id, dto.getStatus());
+        return Result.ok(true);
+    }
+
 }
