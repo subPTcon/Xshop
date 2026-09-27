@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.michael.product.mapper.SkuMapper">
+
+    <select id="selectMinPriceByProductIds"
+            resultType="org.michael.product.pojo.ProductMinPrice">
+
+        SELECT
+        product_id AS productId,
+        MIN(price) AS minPrice
+        FROM t_sku
+        WHERE product_id IN
+        <foreach collection="productIds"
+                 item="productId"
+                 open="("
+                 separator=","
+                 close=")">
+            #{productId}
+        </foreach>
+        AND status = 1
+        GROUP BY product_id
+
+    </select>
+
+</mapper>

@@ -1,27 +1,30 @@
 package org.michael.product.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.michael.common.exception.BusinessException;
 import org.michael.common.exception.ErrorCode;
 import org.michael.product.dto.ProductCreateDTO;
+import org.michael.product.dto.ProductListQueryDTO;
 import org.michael.product.dto.SkuCreateDTO;
 import org.michael.product.mapper.CategoryMapper;
 import org.michael.product.mapper.ProductMapper;
 import org.michael.product.mapper.SkuMapper;
 import org.michael.product.pojo.Product;
+import org.michael.product.pojo.ProductMinPrice;
 import org.michael.product.pojo.Sku;
 import org.michael.product.service.ProductService;
-import org.michael.product.vo.ProductDetailSkuVO;
-import org.michael.product.vo.ProductDetailVO;
-import org.michael.product.vo.ProductSkuVO;
-import org.michael.product.vo.SkuDetailVO;
+import org.michael.product.vo.*;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -153,6 +156,73 @@ public class ProductServiceImpl implements ProductService {
         vo.setSkus(skuVOList);
 
         return vo;
+    }
+
+    @Override
+    public ProductPageVO getProductList(ProductListQueryDTO query) {
+        // 1.构造商品查询条件
+        LambdaQueryWrapper<Product> wrapper =
+                new LambdaQueryWrapper<Product>()
+                        .eq(Product::getStatus, 1)
+                        .eq(
+                                query.getCategoryId() != null,
+                                Product::getCategoryId,
+                                query.getCategoryId()
+                        )
+                        .like(
+                                query.getKeyword() != null
+                                && !query.getKeyword().isBlank(),
+                                Product::getTitle,
+                                query.getKeyword()
+                        )
+                        .orderByDesc(Product::getId);
+
+        // 2.分页查询商品
+        Page<Product> page = new Page<>(
+                query.getPage(),
+                query.getSize()
+        );
+        Page<Product> productPage = productMapper.selectPage(page, wrapper);
+        List<Product> products = productPage.getRecords();
+
+        // 当前页无数据，直接返回
+        if (products.isEmpty()) {
+            return new ProductPageVO(
+                    List.of(),
+                    productPage.getTotal()
+            );
+        }
+
+        // 3.拿出当前页所有 productId
+        List<Long> productIds = products.stream()
+                .map(Product::getId)
+                .toList();
+
+        // 4.一次性查当前页面商品的最低 SKU 价格
+        List<ProductMinPrice> minPrices = skuMapper.selectMinPriceByProductIds(productIds);
+
+        // 5.转成Map，方便匹配
+        Map<Long, BigDecimal> priceMap =
+                minPrices.stream()
+                        .collect(Collectors.toMap(
+                                ProductMinPrice::getProductId,
+                                ProductMinPrice::getMinPrice
+                        ));
+
+        // 6.转VO
+        List<ProductListItemVO> list =
+                products.stream()
+                        .map(product -> {
+                            ProductListItemVO vo = new ProductListItemVO();
+                            vo.setId(product.getId());
+                            vo.setTitle(product.getTitle());
+                            vo.setMainImage(product.getMainImage());
+                            vo.setMinPrice(priceMap.get(product.getId()));
+
+                            return vo;
+                        }).toList();
+
+        return new ProductPageVO(list, productPage.getTotal());
     }
 
     private void validateProductCreate(ProductCreateDTO dto) {

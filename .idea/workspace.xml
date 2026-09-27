@@ -7,8 +7,10 @@
     <list default="true" id="f83472c5-673d-4ca7-8997-ba143d7af52b" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/product-service/src/main/java/org/michael/product/controller/ProductController.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/main/java/org/michael/product/controller/ProductController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/product-service/src/main/java/org/michael/product/mapper/SkuMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/main/java/org/michael/product/mapper/SkuMapper.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/product-service/src/main/java/org/michael/product/service/ProductService.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/main/java/org/michael/product/service/ProductService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/product-service/src/main/java/org/michael/product/service/impl/ProductServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/main/java/org/michael/product/service/impl/ProductServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/product-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/product-service/src/main/resources/application.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -148,7 +150,8 @@
       <workItem from="1790347364632" duration="3937000" />
       <workItem from="1790416192716" duration="8289000" />
       <workItem from="1790498632962" duration="1436000" />
-      <workItem from="1790500079190" duration="510000" />
+      <workItem from="1790500079190" duration="753000" />
+      <workItem from="1790500842741" duration="2798000" />
     </task>
     <servers />
   </component>

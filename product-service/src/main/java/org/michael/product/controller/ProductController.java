@@ -5,10 +5,12 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.michael.product.dto.ProductCreateDTO;
+import org.michael.product.dto.ProductListQueryDTO;
 import org.michael.product.service.ProductService;
 import org.michael.product.vo.ProductCreateVO;
 import org.michael.common.result.Result;
 import org.michael.product.vo.ProductDetailVO;
+import org.michael.product.vo.ProductPageVO;
 import org.michael.product.vo.ProductSkuVO;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,5 +48,12 @@ public class ProductController {
         log.info("GET /products/get/{id} id={}, 时间:{}", id, LocalDateTime.now());
         ProductDetailVO detail = productService.getProductDetail(id);
         return Result.ok(detail);
+    }
+
+    @GetMapping("/get")
+    public Result<ProductPageVO> getProductList(@Valid ProductListQueryDTO query) {
+        log.info("GET /products/get query={}, 时间:{}", query, LocalDateTime.now());
+        ProductPageVO result = productService.getProductList(query);
+        return Result.ok(result);
     }
 }
