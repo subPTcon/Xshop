@@ -1,6 +1,7 @@
 package org.michael.product.service;
 
 import org.michael.product.dto.ProductCreateDTO;
+import org.michael.product.vo.SkuDetailVO;
 
 public interface ProductService {
 
@@ -11,4 +12,6 @@ public interface ProductService {
      * @return 商品ID
      */
     Long addProduct(ProductCreateDTO dto);
+
+    SkuDetailVO getSkuById(Long skuId);
 }

@@ -12,6 +12,8 @@ import org.michael.product.mapper.SkuMapper;
 import org.michael.product.pojo.Product;
 import org.michael.product.pojo.Sku;
 import org.michael.product.service.ProductService;
+import org.michael.product.vo.SkuDetailVO;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,10 +56,32 @@ public class ProductServiceImpl implements ProductService {
             sku.setImage(skuDTO.getImage());
             sku.setStatus(1);
 
-            skuMapper.insert(sku);
+            try {
+                skuMapper.insert(sku);
+            } catch (DuplicateKeyException e) {
+                throw new BusinessException(ErrorCode.SKU_CODE_EXISTS);
+            }
         }
 
         return productId;
+    }
+
+    @Override
+    public SkuDetailVO getSkuById(Long skuId) {
+        Sku sku = skuMapper.selectById(skuId);
+
+        if (sku == null) {
+            throw new BusinessException(ErrorCode.SKU_NOT_FOUND);
+        }
+
+        SkuDetailVO vo = new SkuDetailVO();
+
+        vo.setSkuId(sku.getId());
+        vo.setProductId(sku.getProductId());
+        vo.setPrice(sku.getPrice());
+        vo.setStatus(sku.getStatus());
+
+        return vo;
     }
 
     private void validateProductCreate(ProductCreateDTO dto) {

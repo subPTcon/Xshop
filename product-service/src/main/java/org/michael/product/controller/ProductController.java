@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 
 @Slf4j
 @RestController
-@RequestMapping("/admin/products")
+@RequestMapping("/products")
 @RequiredArgsConstructor
 public class ProductController {
 
@@ -24,7 +24,7 @@ public class ProductController {
 
     @PostMapping("/add")
     public Result<ProductCreateVO> addProduct(@Valid @RequestBody ProductCreateDTO dto) {
-        log.info("POST /admin/products/add dto={}, 时间:{}", dto, LocalDateTime.now());
+        log.info("POST /products/add dto={}, 时间:{}", dto, LocalDateTime.now());
         Long productId = productService.addProduct(dto);
         return org.michael.common.result.Result.ok(new ProductCreateVO(productId));
     }
