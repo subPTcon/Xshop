@@ -19,6 +19,7 @@
         <module>user-service</module>
         <module>product-service</module>
         <module>common</module>
+        <module>inventory-service</module>
     </modules>
 
     <properties>
