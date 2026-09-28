@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.michael.common.result.Result;
+import org.michael.inventory.dto.InventoryAddDTO;
 import org.michael.inventory.dto.InventoryInitDTO;
 import org.michael.inventory.service.InventoryService;
 import org.michael.inventory.vo.InventoryStockVO;
@@ -35,6 +36,16 @@ public class InventoryController {
             @Min(value = 1, message = "SKU ID必须大于0")
             Long skuId
     ) {
+        log.info("GET /inventory/get/{skuId} skuId={}, 时间:{}", skuId, LocalDateTime.now());
         return Result.ok(inventoryService.getAvailableStock(skuId));
+    }
+
+    @PostMapping("/add")
+    public Result<Boolean> addStock(
+            @Valid @RequestBody InventoryAddDTO dto
+    ) {
+        log.info("POST /inventory/add dto={}, 时间:{}", dto, LocalDateTime.now());
+        inventoryService.addStock(dto);
+        return Result.ok(true);
     }
 }

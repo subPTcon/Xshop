@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="f83472c5-673d-4ca7-8997-ba143d7af52b" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/controller/InventoryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/controller/InventoryController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/mapper/InventoryMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/mapper/InventoryMapper.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/service/InventoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/service/InventoryService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/service/impl/InventoryServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/service/impl/InventoryServiceImpl.java" afterDir="false" />
     </list>
@@ -137,8 +138,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Spring Boot.InventoryApplication" />
         <item itemvalue="Spring Boot.ProductApplication" />
+        <item itemvalue="Spring Boot.InventoryApplication" />
       </list>
     </recent_temporary>
   </component>
@@ -173,7 +174,7 @@
       <workItem from="1790504424659" duration="1161000" />
       <workItem from="1790505676642" duration="1277000" />
       <workItem from="1790587908356" duration="8552000" />
-      <workItem from="1790597177300" duration="3722000" />
+      <workItem from="1790597177300" duration="4860000" />
     </task>
     <servers />
   </component>

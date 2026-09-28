@@ -7,6 +7,7 @@ import org.michael.common.exception.BusinessException;
 import org.michael.common.exception.ErrorCode;
 import org.michael.common.result.Result;
 import org.michael.inventory.client.ProductClient;
+import org.michael.inventory.dto.InventoryAddDTO;
 import org.michael.inventory.dto.InventoryInitDTO;
 import org.michael.inventory.dto.SkuDTO;
 import org.michael.inventory.mapper.InventoryMapper;
@@ -109,6 +110,60 @@ public class InventoryServiceImpl implements InventoryService {
         );
 
         return new InventoryStockVO(skuId, availableStock);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void addStock(InventoryAddDTO dto) {
+        Long skuId = dto.getSkuId();
+        Integer count = dto.getCount();
+
+        // 1. MySQL原子增加总库存
+        int affectedRows = inventoryMapper.addStock(
+                skuId,
+                count
+        );
+
+        // 2.没有更新到任何记录，说明库存未初始化
+        if (affectedRows == 0) {
+            throw new BusinessException(ErrorCode.INVENTORY_NOT_FOUND);
+        }
+
+        // 3.数据库事务提交成功后更新Redis
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        String key = "inventory:" + skuId;
+
+                        Boolean exists = redisTemplate.hasKey(key);
+
+                        if (Boolean.TRUE.equals(exists)) {
+                            redisTemplate.opsForValue().increment(key, count);
+                        } else {
+                            rebuildInventoryCache(skuId);
+                        }
+                    }
+                }
+        );
+    }
+
+    private void rebuildInventoryCache(Long skuId) {
+        Inventory inventory = inventoryMapper.selectOne(
+                new LambdaQueryWrapper<Inventory>()
+                        .eq(Inventory::getSkuId, skuId)
+        );
+
+        if (inventory == null) {
+            return;
+        }
+
+        int availableStock = inventory.getTotalStock() - inventory.getLockedStock();
+
+        redisTemplate.opsForValue().set(
+                "inventory:" + skuId,
+                String.valueOf(availableStock)
+        );
     }
 
     private void validateSku(Long skuId) {
