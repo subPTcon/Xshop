@@ -1,15 +1,14 @@
 package org.michael.inventory.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.michael.common.result.Result;
 import org.michael.inventory.dto.InventoryInitDTO;
 import org.michael.inventory.service.InventoryService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.michael.inventory.vo.InventoryStockVO;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
@@ -28,5 +27,14 @@ public class InventoryController {
         log.info("POST /inventory/init dto={}, 时间: {}", dto, LocalDateTime.now());
         inventoryService.initInventory(dto);
         return Result.ok(true);
+    }
+
+    @GetMapping("/get/{skuId}")
+    public Result<InventoryStockVO> getAvailableStock(
+            @PathVariable
+            @Min(value = 1, message = "SKU ID必须大于0")
+            Long skuId
+    ) {
+        return Result.ok(inventoryService.getAvailableStock(skuId));
     }
 }

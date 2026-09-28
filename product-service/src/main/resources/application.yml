@@ -31,7 +31,3 @@ mybatis-plus:
 
 jwt:
   secret: xshop-jwt-secret-key-michael-2026-very-secure-key
-
-logging:
-  level:
-    org.michael.product: log

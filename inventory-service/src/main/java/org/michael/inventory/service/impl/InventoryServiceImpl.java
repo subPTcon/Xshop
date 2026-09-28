@@ -12,6 +12,7 @@ import org.michael.inventory.dto.SkuDTO;
 import org.michael.inventory.mapper.InventoryMapper;
 import org.michael.inventory.pojo.Inventory;
 import org.michael.inventory.service.InventoryService;
+import org.michael.inventory.vo.InventoryStockVO;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -78,6 +79,36 @@ public class InventoryServiceImpl implements InventoryService {
                     }
                 }
         );
+    }
+
+    @Override
+    public InventoryStockVO getAvailableStock(Long skuId) {
+        String key = "inventory:" + skuId;
+
+        // 1.优先查 Redis
+        String stockValue = redisTemplate.opsForValue().get(key);
+        if (stockValue != null) {
+            return new InventoryStockVO(skuId, Integer.valueOf(stockValue));
+        }
+
+        // 2.Redis没有，回源 MySQL
+        Inventory inventory = inventoryMapper.selectOne(
+                new LambdaQueryWrapper<Inventory>()
+                        .eq(Inventory::getSkuId, skuId)
+        );
+        if (inventory == null) {
+            throw new BusinessException(ErrorCode.INVENTORY_NOT_FOUND);
+        }
+
+        // 3.计算可售库存
+        int availableStock = inventory.getTotalStock() - inventory.getLockedStock();
+
+        // 4.回填 Redis
+        redisTemplate.opsForValue().set(
+                key, String.valueOf(availableStock)
+        );
+
+        return new InventoryStockVO(skuId, availableStock);
     }
 
     private void validateSku(Long skuId) {
