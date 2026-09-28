@@ -29,6 +29,7 @@ public enum ErrorCode {
     PRODUCT_NOT_FOUND(40410, "商品不存在"),
     SKU_NOT_FOUND(40411, "SKU不存在"),
     CATEGORY_NOT_FOUND(40412, "商品分类不存在"),
+    INVENTORY_NOT_FOUND(40420, "库存记录不存在"),
 
     // 409xx 业务冲突类
     USERNAME_EXISTS(40900, "该用户名已被注册"),
@@ -41,6 +42,9 @@ public enum ErrorCode {
     CATEGORY_PARENT_INVALID(40912, "类目父级设置不合法"),
     CATEGORY_HAS_CHILDREN(40913, "该类目下存在子类目，无法删除"),
     CATEGORY_HAS_PRODUCTS(40914, "该类目下存在商品，无法删除"),
+    INVENTORY_ALREADY_EXISTS(40920, "该SKU库存已经初始化"),
+    INSUFFICIENT_STOCK(40921, "库存不足"),
+    INVENTORY_CONFLICT(40922, "库存状态冲突"),
 
     // 500xx 系统错误类
     SYSTEM_ERROR(50000, "系统繁忙，请稍后重试"),
