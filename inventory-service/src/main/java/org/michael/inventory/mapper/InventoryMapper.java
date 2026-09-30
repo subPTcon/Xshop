@@ -30,4 +30,16 @@ public interface InventoryMapper extends BaseMapper<Inventory> {
             @Param("skuId") Long skuId,
             @Param("count") Integer count
     );
+
+    @Update("""
+    UPDATE t_inventory
+    SET locked_stock = locked_stock - #{count},
+        version = version + 1
+    WHERE sku_id = #{skuId}
+    AND locked_stock >= #{count}
+""")
+    int decreaseLockedStock(
+            @Param("skuId") Long skuId,
+            @Param("count") Integer count
+    );
 }

@@ -7,10 +7,9 @@ import org.michael.common.exception.BusinessException;
 import org.michael.common.exception.ErrorCode;
 import org.michael.common.result.Result;
 import org.michael.inventory.client.ProductClient;
-import org.michael.inventory.dto.InventoryAddDTO;
-import org.michael.inventory.dto.InventoryInitDTO;
-import org.michael.inventory.dto.ReserveInventoryDTO;
-import org.michael.inventory.dto.SkuDTO;
+import org.michael.inventory.dto.*;
+import org.michael.inventory.enums.InventoryChangeType;
+import org.michael.inventory.enums.ReservationStatus;
 import org.michael.inventory.mapper.InventoryLogMapper;
 import org.michael.inventory.mapper.InventoryMapper;
 import org.michael.inventory.mapper.InventoryReservationMapper;
@@ -39,9 +38,10 @@ public class InventoryServiceImpl implements InventoryService {
     private final StringRedisTemplate redisTemplate;
     private final ProductClient productClient;
     private final InventoryReservationMapper reservationMapper;
+    private final InventoryLogMapper inventoryLogMapper;
     private final DefaultRedisScript<Long> inventoryReserveScript;
     private final DefaultRedisScript<Long> inventoryReserveRollbackScript;
-    private final InventoryLogMapper inventoryLogMapper;
+    private final DefaultRedisScript<Long> inventoryReleaseScript;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -211,7 +211,7 @@ public class InventoryServiceImpl implements InventoryService {
             reservation.setSkuId(skuId);
             reservation.setOrderNo(orderNo);
             reservation.setCount(count);
-            reservation.setStatus(0);
+            reservation.setStatus(ReservationStatus.RESERVED.getCode());
             reservationMapper.insert(reservation);
 
             // 7.写库存流水
@@ -245,6 +245,141 @@ public class InventoryServiceImpl implements InventoryService {
         }
 
         return new InventoryReserveVO(true, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean release(InventoryReleaseDTO dto) {
+        Long skuId = dto.getSkuId();
+        String orderNo = dto.getOrderNo();
+
+        // 1.查询预占记录
+        InventoryReservation reservation =
+                reservationMapper.selectOne(
+                        new LambdaQueryWrapper<InventoryReservation>()
+                                .eq(
+                                        InventoryReservation::getSkuId,
+                                        skuId
+                                )
+                                .eq(
+                                        InventoryReservation::getOrderNo,
+                                        orderNo
+                                )
+                );
+        if (reservation == null) {
+            throw new BusinessException(ErrorCode.INVENTORY_RESERVATION_NOT_FOUND);
+        }
+
+        // 2.已经释放，幂等返回成功
+        if (reservation.getStatus().equals(ReservationStatus.RELEASED.getCode())) {
+            return Boolean.TRUE;
+        }
+
+        // 3.已经确认扣减,支付成功后的库存不能再释放
+        if (reservation.getStatus().equals(ReservationStatus.CONFIRMED.getCode())) {
+            throw new BusinessException(ErrorCode.INVENTORY_RESERVATION_STATUS_INVALID);
+        }
+
+        Integer count = reservation.getCount();
+
+        // 4.原子修改 RESERVED -> RELEASED
+        int reservationRows =
+                reservationMapper.releaseReservation(
+                        skuId,
+                        orderNo,
+                        ReservationStatus.RESERVED.getCode(),
+                        ReservationStatus.RELEASED.getCode()
+                );
+        // 可能被另一个release或confirm抢先修改了，再查一次最终状态
+        if (reservationRows == 0) {
+            InventoryReservation latest =
+                    reservationMapper.selectOne(
+                            new LambdaQueryWrapper<InventoryReservation>()
+                                    .eq(
+                                            InventoryReservation::getSkuId,
+                                            skuId
+                                    )
+                                    .eq(
+                                            InventoryReservation::getOrderNo,
+                                            orderNo
+                                    )
+                    );
+
+            if (latest != null && latest.getStatus().equals(ReservationStatus.RELEASED.getCode())) {
+                return Boolean.TRUE;
+            }
+
+            throw new BusinessException(ErrorCode.INVENTORY_RESERVATION_STATUS_INVALID);
+        }
+
+        // 5.MySQL释放锁定库存
+        int inventoryRows =
+                inventoryMapper.decreaseLockedStock(
+                        skuId,
+                        count
+                );
+        if (inventoryRows == 0) {
+            /**
+             * 抛异常后整个MySQL事务回滚
+             *
+             * 上面的 RESERVED -> RELEASED 也会回滚成 RESERVED
+             */
+            throw new BusinessException(
+                    ErrorCode.INVENTORY_CONFLICT
+            );
+        }
+
+        // 6.写流水
+        InventoryLog inventoryLog = new InventoryLog();
+        inventoryLog.setSkuId(skuId);
+        inventoryLog.setOrderNo(orderNo);
+        inventoryLog.setChangeType(InventoryChangeType.RELEASED.getCode());
+        inventoryLog.setChangeCount(count);
+        inventoryLogMapper.insert(inventoryLog);
+
+        // 7.MySQL事务真正提交以后，再恢复Redis可售库存
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        releaseRedisStock(
+                                skuId,
+                                orderNo,
+                                count
+                        );
+                    }
+                }
+        );
+
+        return Boolean.TRUE;
+    }
+
+    private void releaseRedisStock(Long skuId, String orderNo, Integer count) {
+        String stockKey = "inventory:" + skuId;
+        String reserveKey = "inventory:reserved:" + orderNo + ":" + skuId;
+
+        try {
+            Long result =
+                    redisTemplate.execute(
+                            inventoryReleaseScript,
+                            List.of(
+                                    stockKey,
+                                    reserveKey
+                            ),
+                            String.valueOf(count)
+                    );
+            if (result != null && result == -1L) {
+                rebuildInventoryCache(skuId);
+            }
+        } catch (Exception e) {
+            log.error(
+                    "释放Redis预占库存失败，skuId={}, orderNo={}, count={}",
+                    skuId,
+                    orderNo,
+                    count,
+                    e
+            );
+        }
     }
 
     private void rollbackRedisReserve(

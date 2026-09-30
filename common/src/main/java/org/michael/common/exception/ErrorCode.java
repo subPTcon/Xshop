@@ -30,6 +30,7 @@ public enum ErrorCode {
     SKU_NOT_FOUND(40411, "SKU不存在"),
     CATEGORY_NOT_FOUND(40412, "商品分类不存在"),
     INVENTORY_NOT_FOUND(40420, "库存记录不存在"),
+    INVENTORY_RESERVATION_NOT_FOUND(40421, "库存预占记录不存在"),
 
     // 409xx 业务冲突类
     USERNAME_EXISTS(40900, "该用户名已被注册"),
@@ -45,6 +46,7 @@ public enum ErrorCode {
     INVENTORY_ALREADY_EXISTS(40920, "该SKU库存已经初始化"),
     INSUFFICIENT_STOCK(40921, "库存不足"),
     INVENTORY_CONFLICT(40922, "库存状态冲突"),
+    INVENTORY_RESERVATION_STATUS_INVALID(40923, "库存预占状态不允许当前操作"),
 
     // 500xx 系统错误类
     SYSTEM_ERROR(50000, "系统繁忙，请稍后重试"),

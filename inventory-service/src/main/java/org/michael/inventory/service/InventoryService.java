@@ -2,6 +2,7 @@ package org.michael.inventory.service;
 
 import org.michael.inventory.dto.InventoryAddDTO;
 import org.michael.inventory.dto.InventoryInitDTO;
+import org.michael.inventory.dto.InventoryReleaseDTO;
 import org.michael.inventory.dto.ReserveInventoryDTO;
 import org.michael.inventory.vo.InventoryReserveVO;
 import org.michael.inventory.vo.InventoryStockVO;
@@ -15,4 +16,6 @@ public interface InventoryService {
     void addStock(InventoryAddDTO dto);
 
     InventoryReserveVO reserve(ReserveInventoryDTO dto);
+
+    Boolean release(InventoryReleaseDTO dto);
 }

@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.michael.common.result.Result;
 import org.michael.inventory.dto.InventoryAddDTO;
 import org.michael.inventory.dto.InventoryInitDTO;
+import org.michael.inventory.dto.InventoryReleaseDTO;
 import org.michael.inventory.dto.ReserveInventoryDTO;
 import org.michael.inventory.service.InventoryService;
 import org.michael.inventory.vo.InventoryReserveVO;
@@ -57,5 +58,14 @@ public class InventoryController {
     ) {
         log.info("POST /inventory/reserve dto={}, 时间:{}", dto, LocalDateTime.now());
         return Result.ok(inventoryService.reserve(dto));
+    }
+
+    @PostMapping("/release")
+    public Result<Boolean> release(
+            @Valid
+            @RequestBody InventoryReleaseDTO dto
+    ) {
+        log.info("POST /inventory/release dto={}, 时间:{}", dto, LocalDateTime.now());
+        return Result.ok(inventoryService.release(dto));
     }
 }
