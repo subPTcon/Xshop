@@ -333,7 +333,7 @@ public class InventoryServiceImpl implements InventoryService {
         InventoryLog inventoryLog = new InventoryLog();
         inventoryLog.setSkuId(skuId);
         inventoryLog.setOrderNo(orderNo);
-        inventoryLog.setChangeType(InventoryChangeType.RELEASED.getCode());
+        inventoryLog.setChangeType(InventoryChangeType.RELEASE.getCode());
         inventoryLog.setChangeCount(count);
         inventoryLogMapper.insert(inventoryLog);
 
@@ -352,6 +352,138 @@ public class InventoryServiceImpl implements InventoryService {
         );
 
         return Boolean.TRUE;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean confirm(InventoryConfirmDTO dto) {
+        Long skuId = dto.getSkuId();
+        String orderNo = dto.getOrderNo();
+
+        // 1.查询预占记录
+        InventoryReservation reservation =
+                reservationMapper.selectOne(
+                        new LambdaQueryWrapper<InventoryReservation>()
+                                .eq(
+                                        InventoryReservation::getSkuId,
+                                        skuId
+                                )
+                                .eq(
+                                        InventoryReservation::getOrderNo,
+                                        orderNo
+                                )
+                );
+        if (reservation == null) {
+            throw new BusinessException(
+                    ErrorCode.INVENTORY_RESERVATION_NOT_FOUND
+            );
+        }
+
+        // 2.已经CONFIRMED
+        if (reservation.getStatus().equals(
+                ReservationStatus.CONFIRMED.getCode()
+        )) {
+            return Boolean.TRUE;
+        }
+
+        // 3.已经RELEASED
+        if (reservation.getStatus().equals(
+                ReservationStatus.RELEASED.getCode()
+        )) {
+            throw new BusinessException(
+                    ErrorCode.INVENTORY_RESERVATION_STATUS_INVALID
+            );
+        }
+
+        Integer count = reservation.getCount();
+
+        // 4.原子状态迁移 RESERVED -> CONFIRMED
+        int reservationRows =
+                reservationMapper.confirmReservation(
+                        skuId,
+                        orderNo,
+                        ReservationStatus.RESERVED.getCode(),
+                        ReservationStatus.CONFIRMED.getCode()
+                );
+        // 可能同时有 confirm 和 release 操作在竞争这条预占记录
+        if (reservationRows == 0) {
+            InventoryReservation latest =
+                    reservationMapper.selectOne(
+                            new LambdaQueryWrapper<InventoryReservation>()
+                                    .eq(
+                                            InventoryReservation::getSkuId,
+                                            skuId
+                                    )
+                                    .eq(
+                                            InventoryReservation::getOrderNo,
+                                            orderNo
+                                    )
+                    );
+
+            // 别的线程已经confirm成功，当前请求按照幂等处理
+            if (latest != null && latest.getStatus().equals(ReservationStatus.CONFIRMED.getCode())) {
+                return Boolean.TRUE;
+            }
+
+            // 如果已经RELEASED，或者出现其他状态，不允许继续confirm
+            throw new BusinessException(
+                    ErrorCode.INVENTORY_RESERVATION_STATUS_INVALID
+            );
+        }
+
+        // 5.正式扣减库存
+        int inventoryRows =
+                inventoryMapper.confirmStock(
+                        skuId,
+                        count
+                );
+
+        if (inventoryRows == 0) {
+            /**
+             * 抛异常后会回滚
+             *
+             * 上面的 RESERVED -> CONFIRMED 也会回滚
+             */
+            throw new BusinessException(
+                    ErrorCode.INVENTORY_CONFLICT
+            );
+        }
+
+        // 6.写库存流水
+        InventoryLog inventoryLog = new InventoryLog();
+        inventoryLog.setSkuId(skuId);
+        inventoryLog.setOrderNo(orderNo);
+        inventoryLog.setChangeType(
+                InventoryChangeType.CONFIRME.getCode()
+        );
+        inventoryLog.setChangeCount(count);
+        inventoryLogMapper.insert(inventoryLog);
+
+        // 7.MySQL事务成功提交后，清理Redis预占标记，不修改Redis可售库存
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        cleanupConfirmedReservation(skuId, orderNo);
+                    }
+                }
+        );
+
+        return Boolean.TRUE;
+    }
+
+    private void cleanupConfirmedReservation(Long skuId, String orderNo) {
+        String reserveKey = "inventory:reserved:" + orderNo + ":" + skuId;
+        try {
+            redisTemplate.delete(reserveKey);
+        } catch (Exception e) {
+            log.error(
+                    "清理Redis库存预占标记失败, skuId={}, orderNo={}",
+                    skuId,
+                    orderNo,
+                    e
+            );
+        }
     }
 
     private void releaseRedisStock(Long skuId, String orderNo, Integer count) {

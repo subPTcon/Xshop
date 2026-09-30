@@ -5,10 +5,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.michael.common.result.Result;
-import org.michael.inventory.dto.InventoryAddDTO;
-import org.michael.inventory.dto.InventoryInitDTO;
-import org.michael.inventory.dto.InventoryReleaseDTO;
-import org.michael.inventory.dto.ReserveInventoryDTO;
+import org.michael.inventory.dto.*;
 import org.michael.inventory.service.InventoryService;
 import org.michael.inventory.vo.InventoryReserveVO;
 import org.michael.inventory.vo.InventoryStockVO;
@@ -67,5 +64,14 @@ public class InventoryController {
     ) {
         log.info("POST /inventory/release dto={}, 时间:{}", dto, LocalDateTime.now());
         return Result.ok(inventoryService.release(dto));
+    }
+
+    @PostMapping("/confirm")
+    public Result<Boolean> confirm(
+            @Valid
+            @RequestBody InventoryConfirmDTO dto
+    ) {
+        log.info("POST /inventory/confirm dto={}, 时间:{}", dto, LocalDateTime.now());
+        return Result.ok(inventoryService.confirm(dto));
     }
 }

@@ -23,4 +23,19 @@ public interface InventoryReservationMapper extends BaseMapper<InventoryReservat
             @Param("reservedStatus") Integer reservedStatus,
             @Param("releasedStatus") Integer releasedStatus
     );
+
+    @Update("""
+    UPDATE t_inventory_reservation
+    SET status = #{confirmedStatus},
+        update_time = NOW()
+    WHERE sku_id = #{skuId}
+    AND order_no = #{orderNo}
+    AND status = #{reservedStatus}
+""")
+    int confirmReservation(
+            @Param("skuId") Long skuId,
+            @Param("orderNo") String orderNo,
+            @Param("reservedStatus") Integer reservedStatus,
+            @Param("confirmedStatus") Integer confirmedStatus
+    );
 }

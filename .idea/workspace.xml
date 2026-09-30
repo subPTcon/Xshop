@@ -5,15 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f83472c5-673d-4ca7-8997-ba143d7af52b" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/339f55b4-23a7-4d98-ac7d-a07f86b48e17.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/339f55b4-23a7-4d98-ac7d-a07f86b48e17.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/org/michael/common/exception/ErrorCode.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/org/michael/common/exception/ErrorCode.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/config/RedisScriptConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/config/RedisScriptConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/controller/InventoryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/controller/InventoryController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/enums/InventoryChangeType.java" beforeDir="false" afterPath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/enums/InventoryChangeType.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/mapper/InventoryMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/mapper/InventoryMapper.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/mapper/InventoryReservationMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/mapper/InventoryReservationMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/pojo/InventoryReservation.java" beforeDir="false" afterPath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/pojo/InventoryReservation.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/service/InventoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/service/InventoryService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/service/impl/InventoryServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/inventory-service/src/main/java/org/michael/inventory/service/impl/InventoryServiceImpl.java" afterDir="false" />
     </list>
@@ -183,7 +178,7 @@
       <workItem from="1790505676642" duration="1277000" />
       <workItem from="1790587908356" duration="8552000" />
       <workItem from="1790597177300" duration="5112000" />
-      <workItem from="1790786236377" duration="6547000" />
+      <workItem from="1790786236377" duration="8034000" />
     </task>
     <servers />
   </component>
