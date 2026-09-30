@@ -9,17 +9,26 @@ import org.michael.common.result.Result;
 import org.michael.inventory.client.ProductClient;
 import org.michael.inventory.dto.InventoryAddDTO;
 import org.michael.inventory.dto.InventoryInitDTO;
+import org.michael.inventory.dto.ReserveInventoryDTO;
 import org.michael.inventory.dto.SkuDTO;
+import org.michael.inventory.mapper.InventoryLogMapper;
 import org.michael.inventory.mapper.InventoryMapper;
+import org.michael.inventory.mapper.InventoryReservationMapper;
 import org.michael.inventory.pojo.Inventory;
+import org.michael.inventory.pojo.InventoryLog;
+import org.michael.inventory.pojo.InventoryReservation;
 import org.michael.inventory.service.InventoryService;
+import org.michael.inventory.vo.InventoryReserveVO;
 import org.michael.inventory.vo.InventoryStockVO;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -29,6 +38,10 @@ public class InventoryServiceImpl implements InventoryService {
     private final InventoryMapper inventoryMapper;
     private final StringRedisTemplate redisTemplate;
     private final ProductClient productClient;
+    private final InventoryReservationMapper reservationMapper;
+    private final DefaultRedisScript<Long> inventoryReserveScript;
+    private final DefaultRedisScript<Long> inventoryReserveRollbackScript;
+    private final InventoryLogMapper inventoryLogMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -146,6 +159,113 @@ public class InventoryServiceImpl implements InventoryService {
                     }
                 }
         );
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public InventoryReserveVO reserve(
+            ReserveInventoryDTO dto
+    ) {
+        Long skuId = dto.getSkuId();
+        String orderNo = dto.getOrderNo();
+        Integer count = dto.getCount();
+
+        String stockKey = "inventory:" + skuId;
+        String reserveKey = "inventory:reserved:" + orderNo + ":" + skuId;
+
+        // 1.Redis Lua原子预扣
+        Long result = redisTemplate.execute(
+                inventoryReserveScript,
+                List.of(stockKey, reserveKey),
+                String.valueOf(count),
+                String.valueOf(30 * 60)
+        );
+        if (result == null) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+        }
+
+        // 2.库存不足
+        if (result == 0L) {
+            return new InventoryReserveVO(false, "库存不足");
+        }
+
+        // 3.Redis库存不存在
+        if (result == -1L) {
+            throw new BusinessException(ErrorCode.INVENTORY_NOT_FOUND);
+        }
+
+        // 4.已经预占过
+        if (result == 2L) {
+            return new InventoryReserveVO(true, "库存已预占，请勿重复提交");
+        }
+
+        try {
+            // 5.MySQL增加locked_stock
+            int affectedRows = inventoryMapper.increaseLockedStock(skuId, count);
+            if (affectedRows == 0) {
+                throw new BusinessException(ErrorCode.INVENTORY_NOT_FOUND);
+            }
+
+            // 6.写预占记录
+            InventoryReservation reservation = new InventoryReservation();
+            reservation.setSkuId(skuId);
+            reservation.setOrderNo(orderNo);
+            reservation.setCount(count);
+            reservation.setStatus(0);
+            reservationMapper.insert(reservation);
+
+            // 7.写库存流水
+            InventoryLog inventoryLog = new InventoryLog();
+            inventoryLog.setSkuId(skuId);
+            inventoryLog.setOrderNo(orderNo);
+            inventoryLog.setChangeType(1);
+            inventoryLog.setChangeCount(count);
+            inventoryLogMapper.insert(inventoryLog);
+        } catch (Exception e) {
+            /**
+             * Redis已经扣了
+             * 但MySQL持久化失败
+             *
+             * 必须把Redis库存补回来
+             */
+            rollbackRedisReserve(stockKey, reserveKey, count);
+
+            if (e instanceof BusinessException businessException) {
+                throw businessException;
+            }
+
+            if (e instanceof DuplicateKeyException) {
+                return new InventoryReserveVO(
+                        true,
+                        "库存已预占，请勿重复提交"
+                );
+            }
+
+            throw e;
+        }
+
+        return new InventoryReserveVO(true, null);
+    }
+
+    private void rollbackRedisReserve(
+            String stockKey,
+            String reserveKey,
+            Integer count
+    ) {
+        try {
+            redisTemplate.execute(
+                    inventoryReserveRollbackScript,
+                    List.of(stockKey, reserveKey),
+                    String.valueOf(count)
+            );
+        } catch (Exception e) {
+            log.error(
+                    "Redis库存补偿失败, stockKey={}, reserveKey={}",
+                    stockKey,
+                    reserveKey,
+                    e
+            );
+        }
     }
 
     private void rebuildInventoryCache(Long skuId) {

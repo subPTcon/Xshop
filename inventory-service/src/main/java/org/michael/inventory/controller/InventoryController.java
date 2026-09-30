@@ -7,7 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.michael.common.result.Result;
 import org.michael.inventory.dto.InventoryAddDTO;
 import org.michael.inventory.dto.InventoryInitDTO;
+import org.michael.inventory.dto.ReserveInventoryDTO;
 import org.michael.inventory.service.InventoryService;
+import org.michael.inventory.vo.InventoryReserveVO;
 import org.michael.inventory.vo.InventoryStockVO;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,5 +49,13 @@ public class InventoryController {
         log.info("POST /inventory/add dto={}, 时间:{}", dto, LocalDateTime.now());
         inventoryService.addStock(dto);
         return Result.ok(true);
+    }
+
+    @PostMapping("/reserve")
+    public Result<InventoryReserveVO> reserve(
+            @Valid @RequestBody ReserveInventoryDTO dto
+    ) {
+        log.info("POST /inventory/reserve dto={}, 时间:{}", dto, LocalDateTime.now());
+        return Result.ok(inventoryService.reserve(dto));
     }
 }

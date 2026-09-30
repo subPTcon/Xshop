@@ -24,5 +24,6 @@
     <schema id="17" parent="1" name="9"/>
     <string id="18" parent="2" name="inventory:1"/>
     <string id="19" parent="2" name="inventory:2"/>
+    <string id="20" parent="2" name="inventory:reserved:ORDER202610010001:1"/>
   </database-model>
 </dataSource>

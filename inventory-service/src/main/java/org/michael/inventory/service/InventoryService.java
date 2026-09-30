@@ -2,6 +2,8 @@ package org.michael.inventory.service;
 
 import org.michael.inventory.dto.InventoryAddDTO;
 import org.michael.inventory.dto.InventoryInitDTO;
+import org.michael.inventory.dto.ReserveInventoryDTO;
+import org.michael.inventory.vo.InventoryReserveVO;
 import org.michael.inventory.vo.InventoryStockVO;
 
 public interface InventoryService {
@@ -11,4 +13,6 @@ public interface InventoryService {
     InventoryStockVO getAvailableStock(Long skuId);
 
     void addStock(InventoryAddDTO dto);
+
+    InventoryReserveVO reserve(ReserveInventoryDTO dto);
 }
