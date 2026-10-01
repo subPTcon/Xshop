@@ -1,0 +1,33 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: cart-service
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: redis123456
+      database: 2
+      timeout: 3000ms
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+
+    openfeign:
+      client:
+        config:
+          product-service:
+            connectTimeout: 3000
+            readTimeout: 5000
+          inventory-service:
+            connectTimeout: 3000
+            readTimeout: 5000
+
+logging:
+  level:
+    org.michael.cart: debug

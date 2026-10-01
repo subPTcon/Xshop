@@ -27,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -471,6 +471,46 @@ public class InventoryServiceImpl implements InventoryService {
 
         return Boolean.TRUE;
     }
+
+//    @Override
+//    public List<InventoryStockVO> batchGetAvailableStock(
+//            InventoryBatchDTO dto
+//    ) {
+//        List<Long> skuIds = new ArrayList<>(new LinkedHashSet<>(dto.getSkuIds()));
+//        Map<Long, Integer> stockMap = new HashMap<>();
+//
+//        List<String> keys =
+//                skuIds.stream()
+//                        .map(skuId -> "inventory:" + skuId)
+//                        .toList();
+//        List<String> values = redisTemplate.opsForValue().multiGet(keys);
+//        List<Long> missingSkuIds = new ArrayList<>();
+//
+//        for (int i = 0; i < skuIds.size(); i++) {
+//            Long skuId = skuIds.get(i);
+//            String value = values == null ? null : values.get(i);
+//
+//            if (value == null) {
+//                missingSkuIds.add(skuId);
+//                continue;
+//            }
+//
+//            stockMap.put(skuId, Integer.valueOf(value));
+//        }
+//
+//        if (!missingSkuIds.isEmpty()) {
+//            List<Inventory> inventories =
+//                    inventoryLogMapper.selectList(
+//                            new LambdaQueryWrapper<Inventory>()
+//                                    .in(
+//                                            Inventory::getSkuId,
+//                                            missingSkuIds
+//                                    )
+//                    );
+//
+//
+//        }
+//    }
 
     private void cleanupConfirmedReservation(Long skuId, String orderNo) {
         String reserveKey = "inventory:reserved:" + orderNo + ":" + skuId;
