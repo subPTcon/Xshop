@@ -7,6 +7,9 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+
+import java.util.Objects;
 
 @Slf4j
 @RestControllerAdvice
@@ -41,6 +44,22 @@ public class GlobalExceptionHandler {
     public Result<Void> handleConstraintViolationException(ConstraintViolationException e) {
         log.info("参数校验失败: {}", e.getMessage());
         return Result.fail(ErrorCode.PARAM_INVALID.getCode(), e.getMessage());
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public Result<Void> handleHandlerMethodValidationException(HandlerMethodValidationException e) {
+        String message = e.getAllValidationResults()
+                .stream()
+                .flatMap(result -> result.getResolvableErrors().stream())
+                .map(error -> error.getDefaultMessage())
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(ErrorCode.PARAM_INVALID.getMessage());
+        log.info("方法参数校验失败：{}", message);
+        return Result.fail(
+                ErrorCode.PARAM_INVALID.getCode(),
+                message
+        );
     }
 
     /**

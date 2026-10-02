@@ -31,6 +31,7 @@ public enum ErrorCode {
     CATEGORY_NOT_FOUND(40412, "商品分类不存在"),
     INVENTORY_NOT_FOUND(40420, "库存记录不存在"),
     INVENTORY_RESERVATION_NOT_FOUND(40421, "库存预占记录不存在"),
+    CART_ITEM_NOT_FOUND(40430, "购物车商品不存在"),
 
     // 409xx 业务冲突类
     USERNAME_EXISTS(40900, "该用户名已被注册"),

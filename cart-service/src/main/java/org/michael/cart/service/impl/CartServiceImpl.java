@@ -6,6 +6,7 @@ import org.michael.cart.client.ProductClient;
 import org.michael.cart.client.dto.SkuDTO;
 import org.michael.cart.constant.CartRedisConstant;
 import org.michael.cart.dto.CartItemAddDTO;
+import org.michael.cart.dto.CartItemUpdateDTO;
 import org.michael.cart.service.CartService;
 import org.michael.common.exception.BusinessException;
 import org.michael.common.exception.ErrorCode;
@@ -25,6 +26,7 @@ public class CartServiceImpl implements CartService {
     private final StringRedisTemplate redisTemplate;
 
     private final DefaultRedisScript<Long> cartAddScript;
+    private final DefaultRedisScript<Long> cartUpdateScript;
 
     private final ProductClient productClient;
 
@@ -68,6 +70,30 @@ public class CartServiceImpl implements CartService {
         return Boolean.TRUE;
     }
 
+    @Override
+    public Boolean updateItem(Long userId, Long skuId, CartItemUpdateDTO dto) {
+        String cartKey = CartRedisConstant.cartKey(userId);
+        Long result = redisTemplate.execute(
+                cartUpdateScript,
+                List.of(cartKey),
+                String.valueOf(skuId),
+                String.valueOf(dto.getCount()),
+                String.valueOf(Duration.ofDays(CartRedisConstant.CART_EXPIRE_DAYS).toSeconds())
+        );
+
+        if (result == null) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+        }
+
+        if (result == 0L) {
+            throw new BusinessException(ErrorCode.CART_ITEM_NOT_FOUND);
+        }
+
+        log.info("修改购物车商品数量成功，userId={}, skuId={}, count={}", userId, skuId, dto.getCount());
+
+        return Boolean.TRUE;
+    }
+
     private void validateSku(Long skuId) {
         Result<SkuDTO> result;
 
@@ -88,4 +114,5 @@ public class CartServiceImpl implements CartService {
             throw new BusinessException(ErrorCode.SKU_NOT_AVAILABLE);
         }
     }
+
 }

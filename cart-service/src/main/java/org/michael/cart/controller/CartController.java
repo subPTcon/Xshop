@@ -1,10 +1,11 @@
 package org.michael.cart.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.michael.cart.component.LoadBalancerTest;
 import org.michael.cart.dto.CartItemAddDTO;
+import org.michael.cart.dto.CartItemUpdateDTO;
 import org.michael.cart.service.CartService;
 import org.michael.common.context.UserContext;
 import org.michael.common.result.Result;
@@ -19,7 +20,6 @@ import java.time.LocalDateTime;
 public class CartController {
 
     private final CartService cartService;
-    private final LoadBalancerTest loadBalancerTest;
 
     @PostMapping("/items")
     public Result<Boolean> addItem(@Valid @RequestBody CartItemAddDTO dto) {
@@ -28,8 +28,18 @@ public class CartController {
         return Result.ok(cartService.addItem(userId, dto));
     }
 
-    @GetMapping("/test-lb")
-    public void testLb() {
-        loadBalancerTest.printProductInstance();
+    @PutMapping("/items/{skuId}")
+    public Result<Boolean> updateItem(
+            @PathVariable
+            @Min(value = 1, message = "SKU ID必须大于0")
+            Long skuId,
+
+            @Valid
+            @RequestBody
+            CartItemUpdateDTO dto
+    ) {
+        log.info("PUT /cart/items/{skuId} skuId={}, dto={}, 时间:{}", skuId, dto, LocalDateTime.now());
+        Long userId = UserContext.getUserId();
+        return Result.ok(cartService.updateItem(userId, skuId, dto));
     }
 }

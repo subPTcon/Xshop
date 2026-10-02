@@ -16,4 +16,12 @@ public class RedisScriptConfig {
 
         return script;
     }
+
+    @Bean
+    public DefaultRedisScript<Long> cartUpdateScript() {
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setLocation(new ClassPathResource("lua/cart_update.lua"));
+        script.setResultType(Long.class);
+        return script;
+    }
 }
