@@ -94,6 +94,14 @@ public class CartServiceImpl implements CartService {
         return Boolean.TRUE;
     }
 
+    @Override
+    public Boolean deleteItem(Long userId, Long skuId) {
+        String cartKey = CartRedisConstant.cartKey(userId);
+        Long deleted = redisTemplate.opsForHash().delete(cartKey, String.valueOf(skuId));
+        log.info("删除购物车商品，userId={}, skuId={}, deleted={}", userId, skuId, deleted);
+        return Boolean.TRUE;
+    }
+
     private void validateSku(Long skuId) {
         Result<SkuDTO> result;
 

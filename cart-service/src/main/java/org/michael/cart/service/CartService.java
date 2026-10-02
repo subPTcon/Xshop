@@ -8,4 +8,6 @@ public interface CartService {
     Boolean addItem(Long userId, CartItemAddDTO dto);
 
     Boolean updateItem(Long userId, Long skuId, CartItemUpdateDTO dto);
+
+    Boolean deleteItem(Long userId, Long skuId);
 }

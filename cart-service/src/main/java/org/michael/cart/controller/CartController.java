@@ -42,4 +42,15 @@ public class CartController {
         Long userId = UserContext.getUserId();
         return Result.ok(cartService.updateItem(userId, skuId, dto));
     }
+
+    @DeleteMapping("/items/{skuId}")
+    public Result<Boolean> deleteItem(
+            @PathVariable
+            @Min(value = 1, message = "SKU ID必须大于0")
+            Long skuId
+    ) {
+        log.info("DELETE /cart/items/{skuId} skuId={}, 时间:{}", skuId, LocalDateTime.now());
+        Long userId = UserContext.getUserId();
+        return Result.ok(cartService.deleteItem(userId, skuId));
+    }
 }

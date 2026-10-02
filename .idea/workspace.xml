@@ -6,14 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="f83472c5-673d-4ca7-8997-ba143d7af52b" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cart-service/src/main/java/org/michael/cart/component/LoadBalancerTest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cart-service/src/main/java/org/michael/cart/config/RedisScriptConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/cart-service/src/main/java/org/michael/cart/config/RedisScriptConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cart-service/src/main/java/org/michael/cart/config/WebMvcConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/cart-service/src/main/java/org/michael/cart/config/WebMvcConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cart-service/src/main/java/org/michael/cart/controller/CartController.java" beforeDir="false" afterPath="$PROJECT_DIR$/cart-service/src/main/java/org/michael/cart/controller/CartController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cart-service/src/main/java/org/michael/cart/service/CartService.java" beforeDir="false" afterPath="$PROJECT_DIR$/cart-service/src/main/java/org/michael/cart/service/CartService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cart-service/src/main/java/org/michael/cart/service/impl/CartServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/cart-service/src/main/java/org/michael/cart/service/impl/CartServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/org/michael/common/exception/ErrorCode.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/org/michael/common/exception/ErrorCode.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/org/michael/common/interceptor/LoginInterceptor.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/org/michael/common/interceptor/LoginInterceptor.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -220,7 +215,7 @@
       <workItem from="1790597177300" duration="5112000" />
       <workItem from="1790786236377" duration="9914000" />
       <workItem from="1790865504077" duration="1900000" />
-      <workItem from="1790940889740" duration="8271000" />
+      <workItem from="1790940889740" duration="9099000" />
     </task>
     <servers />
   </component>
