@@ -3,7 +3,7 @@ package org.michael.user.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.michael.common.result.Result;
-import org.michael.user.common.context.UserContext;
+import org.michael.common.context.UserContext;
 import org.michael.user.dto.UserInfoResponse;
 import org.michael.user.service.UserService;
 import org.springframework.web.bind.annotation.GetMapping;

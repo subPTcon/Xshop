@@ -1,21 +1,16 @@
-package org.michael.user.common.interceptor;
+package org.michael.common.interceptor;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.michael.common.context.UserContext;
 import org.michael.common.exception.BusinessException;
 import org.michael.common.exception.ErrorCode;
-import org.michael.user.common.context.UserContext;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-/**
- * 登录态校验拦截器
- * 拦截所有标记为需要登录的接口，从Authorization头里取token，去Redis查对应的userId
- * 查到了就存进UserContext供后续Controller/Service使用，查不到就直接抛异常，请求根本进不了Controller
- */
 @Component
 @RequiredArgsConstructor
 public class LoginInterceptor implements HandlerInterceptor {

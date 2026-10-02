@@ -47,6 +47,9 @@ public enum ErrorCode {
     INSUFFICIENT_STOCK(40921, "库存不足"),
     INVENTORY_CONFLICT(40922, "库存状态冲突"),
     INVENTORY_RESERVATION_STATUS_INVALID(40923, "库存预占状态不允许当前操作"),
+    CART_ITEM_COUNT_EXCEEDED(40930, "单个商品数量不能超过99"),
+    CART_ITEM_LIMIT_EXCEEDED(40931, "购物车商品种类不能超过100"),
+    SKU_NOT_AVAILABLE(40932, "SKU当前不可购买"),
 
     // 500xx 系统错误类
     SYSTEM_ERROR(50000, "系统繁忙，请稍后重试"),

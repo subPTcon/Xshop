@@ -3,7 +3,7 @@ package org.michael.user.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.michael.user.common.context.UserContext;
+import org.michael.common.context.UserContext;
 import org.michael.user.dto.AddAddressRequest;
 import org.michael.user.dto.AddAddressResponse;
 import org.michael.user.dto.AddressResponse;
