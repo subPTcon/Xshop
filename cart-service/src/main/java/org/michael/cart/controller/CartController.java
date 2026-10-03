@@ -7,11 +7,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.michael.cart.dto.CartItemAddDTO;
 import org.michael.cart.dto.CartItemUpdateDTO;
 import org.michael.cart.service.CartService;
+import org.michael.cart.vo.CartItemVO;
 import org.michael.common.context.UserContext;
 import org.michael.common.result.Result;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -52,5 +54,12 @@ public class CartController {
         log.info("DELETE /cart/items/{skuId} skuId={}, 时间:{}", skuId, LocalDateTime.now());
         Long userId = UserContext.getUserId();
         return Result.ok(cartService.deleteItem(userId, skuId));
+    }
+
+    @GetMapping
+    public Result<List<CartItemVO>> getCart() {
+        log.info("GET /cart 时间:{}", LocalDateTime.now());
+        Long userId = UserContext.getUserId();
+        return Result.ok(cartService.getCart(userId));
     }
 }

@@ -1,11 +1,11 @@
-package org.michael.product.vo;
+package org.michael.cart.vo;
 
 import lombok.Data;
 
 import java.math.BigDecimal;
 
 @Data
-public class SkuBatchVO {
+public class CartItemVO {
 
     private Long skuId;
 
@@ -19,7 +19,13 @@ public class SkuBatchVO {
 
     private String image;
 
+    private Integer count;
+
+    private Integer availableStock;
+
     private Integer skuStatus;
 
     private Integer productStatus;
+
+    private Boolean available;
 }

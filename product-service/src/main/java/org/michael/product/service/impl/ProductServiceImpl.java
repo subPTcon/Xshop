@@ -290,11 +290,12 @@ public class ProductServiceImpl implements ProductService {
             SkuBatchVO vo = new SkuBatchVO();
             vo.setSkuId(sku.getId());
             vo.setProductId(sku.getProductId());
+            vo.setProductTitle(product.getTitle());
             vo.setSpecJson(sku.getSpecJson());
             vo.setPrice(sku.getPrice());
             vo.setImage(sku.getImage());
-            vo.setStatus(sku.getStatus());
-
+            vo.setSkuStatus(sku.getStatus());
+            vo.setProductStatus(sku.getStatus());
             result.add(vo);
         }
 

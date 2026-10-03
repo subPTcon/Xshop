@@ -12,6 +12,7 @@ import org.michael.inventory.vo.InventoryStockVO;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -73,5 +74,15 @@ public class InventoryController {
     ) {
         log.info("POST /inventory/confirm dto={}, 时间:{}", dto, LocalDateTime.now());
         return Result.ok(inventoryService.confirm(dto));
+    }
+
+    @PostMapping("/batch")
+    public Result<List<InventoryStockVO>> batchGetAvailableStock(
+            @Valid
+            @RequestBody
+            InventoryBatchDTO dto
+    ) {
+        log.info("POST /inventory/batch dto={}, 时间:{}", dto, LocalDateTime.now());
+        return Result.ok(inventoryService.batchGetAvailableStock(dto));
     }
 }

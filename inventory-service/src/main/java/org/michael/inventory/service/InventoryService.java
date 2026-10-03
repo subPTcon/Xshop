@@ -20,5 +20,5 @@ public interface InventoryService {
 
     Boolean confirm(InventoryConfirmDTO dto);
 
-//    List<InventoryStockVO> batchGetAvailableStock(InventoryBatchDTO dto);
+    List<InventoryStockVO> batchGetAvailableStock(InventoryBatchDTO dto);
 }

@@ -28,6 +28,8 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -472,45 +474,206 @@ public class InventoryServiceImpl implements InventoryService {
         return Boolean.TRUE;
     }
 
-//    @Override
-//    public List<InventoryStockVO> batchGetAvailableStock(
-//            InventoryBatchDTO dto
-//    ) {
-//        List<Long> skuIds = new ArrayList<>(new LinkedHashSet<>(dto.getSkuIds()));
-//        Map<Long, Integer> stockMap = new HashMap<>();
-//
-//        List<String> keys =
-//                skuIds.stream()
-//                        .map(skuId -> "inventory:" + skuId)
-//                        .toList();
-//        List<String> values = redisTemplate.opsForValue().multiGet(keys);
-//        List<Long> missingSkuIds = new ArrayList<>();
-//
-//        for (int i = 0; i < skuIds.size(); i++) {
-//            Long skuId = skuIds.get(i);
-//            String value = values == null ? null : values.get(i);
-//
-//            if (value == null) {
-//                missingSkuIds.add(skuId);
-//                continue;
-//            }
-//
-//            stockMap.put(skuId, Integer.valueOf(value));
-//        }
-//
-//        if (!missingSkuIds.isEmpty()) {
-//            List<Inventory> inventories =
-//                    inventoryLogMapper.selectList(
-//                            new LambdaQueryWrapper<Inventory>()
-//                                    .in(
-//                                            Inventory::getSkuId,
-//                                            missingSkuIds
-//                                    )
-//                    );
-//
-//
-//        }
-//    }
+    @Override
+    public List<InventoryStockVO> batchGetAvailableStock(
+            InventoryBatchDTO dto) {
+
+        /*
+         * 1. 去重，同时保留第一次出现的顺序
+         */
+        List<Long> skuIds =
+                new ArrayList<>(
+                        new LinkedHashSet<>(
+                                dto.getSkuIds()
+                        )
+                );
+
+        /*
+         * skuId -> availableStock
+         */
+        Map<Long, Integer> stockMap =
+                new HashMap<>();
+
+        /*
+         * 2. Redis keys
+         */
+        List<String> keys =
+                skuIds.stream()
+                        .map(
+                                skuId ->
+                                        "inventory:" + skuId
+                        )
+                        .toList();
+
+        /*
+         * 3. Redis批量读取
+         *
+         * 对应 Redis：
+         *
+         * MGET inventory:1 inventory:2 ...
+         */
+        List<String> redisValues =
+                redisTemplate.opsForValue()
+                        .multiGet(keys);
+
+        /*
+         * Redis没有命中的skuId
+         */
+        List<Long> missingSkuIds =
+                new ArrayList<>();
+
+        for (int i = 0;
+             i < skuIds.size();
+             i++) {
+
+            Long skuId =
+                    skuIds.get(i);
+
+            String value =
+                    redisValues == null
+                            ? null
+                            : redisValues.get(i);
+
+            if (value == null) {
+
+                missingSkuIds.add(
+                        skuId
+                );
+
+                continue;
+            }
+
+            try {
+
+                stockMap.put(
+                        skuId,
+                        Integer.valueOf(value)
+                );
+
+            } catch (NumberFormatException e) {
+
+                /*
+                 * Redis里如果出现脏数据，
+                 * 不让整个接口失败，
+                 * 直接当成缓存未命中，回源MySQL。
+                 */
+                missingSkuIds.add(
+                        skuId
+                );
+
+                log.warn(
+                        "Redis库存数据格式异常，skuId={}, value={}",
+                        skuId,
+                        value
+                );
+            }
+        }
+
+        /*
+         * 4. Redis miss时一次性查询MySQL
+         */
+        if (!missingSkuIds.isEmpty()) {
+
+            List<Inventory> inventories =
+                    inventoryMapper.selectList(
+                            new LambdaQueryWrapper<Inventory>()
+                                    .in(
+                                            Inventory::getSkuId,
+                                            missingSkuIds
+                                    )
+                    );
+
+            Map<Long, Inventory> inventoryMap =
+                    inventories.stream()
+                            .collect(
+                                    Collectors.toMap(
+                                            Inventory::getSkuId,
+                                            Function.identity()
+                                    )
+                            );
+
+            /*
+             * 用于批量回填Redis
+             */
+            Map<String, String> cacheMap =
+                    new HashMap<>();
+
+            for (Long skuId : missingSkuIds) {
+
+                Inventory inventory =
+                        inventoryMap.get(skuId);
+
+                /*
+                 * SKU没有初始化库存：
+                 *
+                 * 批量查询场景按0处理。
+                 */
+                if (inventory == null) {
+
+                    stockMap.put(
+                            skuId,
+                            0
+                    );
+
+                    continue;
+                }
+
+                int availableStock =
+                        inventory.getTotalStock()
+                                - inventory.getLockedStock();
+
+                /*
+                 * 正常情况下不应该小于0。
+                 * 为了避免异常数据继续向上游扩散，
+                 * 最低按0返回。
+                 */
+                availableStock =
+                        Math.max(
+                                availableStock,
+                                0
+                        );
+
+                stockMap.put(
+                        skuId,
+                        availableStock
+                );
+
+                cacheMap.put(
+                        "inventory:" + skuId,
+                        String.valueOf(
+                                availableStock
+                        )
+                );
+            }
+
+            /*
+             * 5. 批量回填Redis
+             */
+            if (!cacheMap.isEmpty()) {
+
+                redisTemplate.opsForValue()
+                        .multiSet(
+                                cacheMap
+                        );
+            }
+        }
+
+        /*
+         * 6. 按去重后的请求顺序返回
+         */
+        return skuIds.stream()
+                .map(
+                        skuId ->
+                                new InventoryStockVO(
+                                        skuId,
+                                        stockMap.getOrDefault(
+                                                skuId,
+                                                0
+                                        )
+                                )
+                )
+                .toList();
+    }
 
     private void cleanupConfirmedReservation(Long skuId, String orderNo) {
         String reserveKey = "inventory:reserved:" + orderNo + ":" + skuId;

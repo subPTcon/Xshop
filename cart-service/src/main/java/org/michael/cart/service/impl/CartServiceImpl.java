@@ -2,12 +2,14 @@ package org.michael.cart.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.michael.cart.client.InventoryClient;
 import org.michael.cart.client.ProductClient;
-import org.michael.cart.client.dto.SkuDTO;
+import org.michael.cart.client.dto.*;
 import org.michael.cart.constant.CartRedisConstant;
 import org.michael.cart.dto.CartItemAddDTO;
 import org.michael.cart.dto.CartItemUpdateDTO;
 import org.michael.cart.service.CartService;
+import org.michael.cart.vo.CartItemVO;
 import org.michael.common.exception.BusinessException;
 import org.michael.common.exception.ErrorCode;
 import org.michael.common.result.Result;
@@ -16,7 +18,12 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -29,6 +36,7 @@ public class CartServiceImpl implements CartService {
     private final DefaultRedisScript<Long> cartUpdateScript;
 
     private final ProductClient productClient;
+    private final InventoryClient inventoryClient;
 
     @Override
     public Boolean addItem(Long userId, CartItemAddDTO dto) {
@@ -100,6 +108,96 @@ public class CartServiceImpl implements CartService {
         Long deleted = redisTemplate.opsForHash().delete(cartKey, String.valueOf(skuId));
         log.info("删除购物车商品，userId={}, skuId={}, deleted={}", userId, skuId, deleted);
         return Boolean.TRUE;
+    }
+
+    @Override
+    public List<CartItemVO> getCart(Long userId) {
+        String cartKey = CartRedisConstant.cartKey(userId);
+
+        // 1.查询Redis购物车
+        Map<Object, Object> entries = redisTemplate.opsForHash().entries(cartKey);
+        if (entries == null || entries.isEmpty()) {
+            return List.of();
+        }
+
+        // skuId -> count
+        Map<Long, Integer> cartMap = new LinkedHashMap<>();
+        for (Map.Entry<Object, Object> entry: entries.entrySet()) {
+            Long skuId = Long.valueOf(entry.getKey().toString());
+            Integer count = Integer.valueOf(entry.getValue().toString());
+            cartMap.put(skuId, count);
+        }
+
+        List<Long> skuIds = new ArrayList<>(cartMap.keySet());
+
+        // 2.调product-service
+        Result<List<SkuBatchDTO>> productResult;
+
+        try {
+            productResult = productClient.batchGetSkus(new SkuBatchRequest(skuIds));
+        } catch (Exception e) {
+            log.error("调用product-service批量查询SKU失败，userId={}, skuIds={}", userId, skuIds, e);
+
+            throw new BusinessException(ErrorCode.REMOTE_SERVICE_ERROR);
+        }
+
+        List<SkuBatchDTO> skuList = productResult == null || productResult.getData() == null ? List.of() : productResult.getData();
+        Map<Long, SkuBatchDTO> skuMap = skuList.stream()
+                .collect(
+                        Collectors.toMap(
+                                SkuBatchDTO::getSkuId,
+                                Function.identity()
+                        )
+                );
+
+        // 3.调inventory-service
+        Result<List<InventoryStockDTO>> inventoryResult;
+
+        try {
+            inventoryResult = inventoryClient.batchGetStock(new InventoryBatchRequest(skuIds));
+        } catch (Exception e) {
+            log.error("调用inventory-service批量查询库存失败, userId={}, skuIds={}", userId, skuIds, e);
+            throw new BusinessException(ErrorCode.REMOTE_SERVICE_ERROR);
+        }
+
+        List<InventoryStockDTO> stockList = inventoryResult == null || inventoryResult.getData() == null ? List.of() : inventoryResult.getData();
+        Map<Long, Integer> stockMap = stockList.stream()
+                .collect(Collectors.toMap(
+                        InventoryStockDTO::getSkuId,
+                        InventoryStockDTO::getAvailableStock
+                ));
+
+        // 4.聚合
+        List<CartItemVO> result = new ArrayList<>();
+        for (Map.Entry<Long, Integer> entry: cartMap.entrySet()) {
+            Long skuId = entry.getKey();
+            Integer count = entry.getValue();
+            SkuBatchDTO sku = skuMap.get(skuId);
+
+            if (sku == null) {
+                continue;
+            }
+
+            Integer availableStock = stockMap.getOrDefault(skuId, 0);
+            CartItemVO vo = new CartItemVO();
+            vo.setSkuId(skuId);
+            vo.setProductId(sku.getProductId());
+            vo.setProductTitle(sku.getProductTitle());
+            vo.setSpecJson(sku.getSpecJson());
+            vo.setPrice(sku.getPrice());
+            vo.setImage(sku.getImage());
+            vo.setCount(count);
+            vo.setAvailableStock(availableStock);
+            vo.setSkuStatus(sku.getSkuStatus());
+            vo.setProductStatus(sku.getProductStatus());
+            boolean available = Integer.valueOf(1).equals(sku.getSkuStatus())
+                    && Integer.valueOf(1).equals(sku.getProductStatus())
+                    && availableStock > 0;
+            vo.setAvailable(available);
+            result.add(vo);
+        }
+
+        return result;
     }
 
     private void validateSku(Long skuId) {
