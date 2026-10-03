@@ -200,6 +200,15 @@ public class CartServiceImpl implements CartService {
         return result;
     }
 
+    @Override
+    public Boolean clearCart(Long userId) {
+        String cartKey = CartRedisConstant.cartKey(userId);
+        Boolean deleted = redisTemplate.delete(cartKey);
+
+        log.info("清空购物车, userId={}, deleted={}", userId, deleted);
+        return Boolean.TRUE;
+    }
+
     private void validateSku(Long skuId) {
         Result<SkuDTO> result;
 

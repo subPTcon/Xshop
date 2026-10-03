@@ -15,4 +15,6 @@ public interface CartService {
     Boolean deleteItem(Long userId, Long skuId);
 
     List<CartItemVO> getCart(Long userId);
+
+    Boolean clearCart(Long userId);
 }

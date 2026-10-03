@@ -62,4 +62,11 @@ public class CartController {
         Long userId = UserContext.getUserId();
         return Result.ok(cartService.getCart(userId));
     }
+
+    @DeleteMapping
+    public Result<Boolean> clearCart() {
+        log.info("DELETE /cart 时间:{}", LocalDateTime.now());
+        Long userId = UserContext.getUserId();
+        return Result.ok(cartService.clearCart(userId));
+    }
 }
