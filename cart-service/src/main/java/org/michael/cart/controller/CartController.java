@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.michael.cart.dto.CartItemAddDTO;
 import org.michael.cart.dto.CartItemUpdateDTO;
+import org.michael.cart.dto.CartRemoveItemsDTO;
 import org.michael.cart.service.CartService;
 import org.michael.cart.vo.CartItemVO;
 import org.michael.common.context.UserContext;
@@ -68,5 +69,15 @@ public class CartController {
         log.info("DELETE /cart 时间:{}", LocalDateTime.now());
         Long userId = UserContext.getUserId();
         return Result.ok(cartService.clearCart(userId));
+    }
+
+    @PostMapping("/remove-items")
+    public Result<Boolean> removeItems(
+            @Valid
+            @RequestBody
+            CartRemoveItemsDTO dto
+    ) {
+        log.info("POST /cart/remove-items dto={}, 时间:{}", dto, LocalDateTime.now());
+        return Result.ok(cartService.removeItems(dto.getUserId(), , dto.getSkuIds()));
     }
 }

@@ -17,4 +17,6 @@ public interface CartService {
     List<CartItemVO> getCart(Long userId);
 
     Boolean clearCart(Long userId);
+
+    Boolean removeItems(Long userId, List<Long> skuIds);
 }
