@@ -7,6 +7,7 @@ import org.michael.common.exception.BusinessException;
 import org.michael.common.exception.ErrorCode;
 import org.michael.product.dto.ProductCreateDTO;
 import org.michael.product.dto.ProductListQueryDTO;
+import org.michael.product.dto.SkuBatchQueryDTO;
 import org.michael.product.dto.SkuCreateDTO;
 import org.michael.product.mapper.CategoryMapper;
 import org.michael.product.mapper.ProductMapper;
@@ -21,9 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -236,6 +236,69 @@ public class ProductServiceImpl implements ProductService {
         product.setStatus(status);
 
         productMapper.updateById(product);
+    }
+
+    @Override
+    public List<SkuBatchVO> batchQuery(SkuBatchQueryDTO dto) {
+        // 1.skuId去重
+        List<Long> skuIds = new ArrayList<>(new LinkedHashSet<>(dto.getSkuIds()));
+
+        // 2.一次性查询SKU
+        List<Sku> skus = skuMapper.selectList(new LambdaQueryWrapper<Sku>().in(Sku::getId, skuIds));
+        if (skus.isEmpty()) {
+            return List.of();
+        }
+
+        // 3.收集productId
+        List<Long> productIds = skus.stream().map(Sku::getProductId).distinct().toList();
+
+        // 4.一次性查询商品
+        List<Product> products = productMapper.selectList(
+                new LambdaQueryWrapper<Product>().in(
+                        Product::getId,
+                        productIds
+                )
+        );
+
+        // 5.productId -> Product
+        Map<Long, Product> productMap = products.stream().collect(
+                Collectors.toMap(Product::getId, Function.identity())
+        );
+
+        // 6.skuId -> Sku
+        Map<Long, Sku> skuMap = skus.stream().collect(
+                Collectors.toMap(
+                        Sku::getId,
+                        Function.identity()
+                )
+        );
+
+        // 7.按请求skuId原顺序组装结果
+        List<SkuBatchVO> result = new ArrayList<>();
+        for (Long skuId : skuIds) {
+            Sku sku = skuMap.get(skuId);
+            if (sku == null) {
+                continue;
+            }
+
+            Product product = productMap.get(sku.getProductId());
+
+            if (product == null) {
+                continue;
+            }
+
+            SkuBatchVO vo = new SkuBatchVO();
+            vo.setSkuId(sku.getId());
+            vo.setProductId(sku.getProductId());
+            vo.setSpecJson(sku.getSpecJson());
+            vo.setPrice(sku.getPrice());
+            vo.setImage(sku.getImage());
+            vo.setStatus(sku.getStatus());
+
+            result.add(vo);
+        }
+
+        return result;
     }
 
     private void validateProductCreate(ProductCreateDTO dto) {

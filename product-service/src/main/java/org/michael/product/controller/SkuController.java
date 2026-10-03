@@ -1,18 +1,19 @@
 package org.michael.product.controller;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.michael.common.result.Result;
+import org.michael.product.dto.SkuBatchQueryDTO;
 import org.michael.product.service.ProductService;
+import org.michael.product.vo.SkuBatchVO;
 import org.michael.product.vo.SkuDetailVO;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Validated
@@ -28,5 +29,15 @@ public class SkuController {
         log.info("GET /skus/get/{skuId} skuId={}, 时间:{}", skuId, LocalDateTime.now());
         SkuDetailVO sku = productService.getSkuById(skuId);
         return Result.ok(sku);
+    }
+
+    @PostMapping("/batch")
+    public Result<List<SkuBatchVO>> batchQuery(
+            @Valid
+            @RequestBody
+            SkuBatchQueryDTO dto
+    ) {
+        log.info("POST /skus/batch dto={}, 时间:{}", dto, LocalDateTime.now());
+        return Result.ok(productService.batchQuery(dto));
     }
 }
