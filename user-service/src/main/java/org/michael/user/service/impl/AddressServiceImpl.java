@@ -9,6 +9,7 @@ import org.michael.user.dto.AddressResponse;
 import org.michael.user.mapper.AddressMapper;
 import org.michael.user.pojo.Address;
 import org.michael.user.service.AddressService;
+import org.michael.user.vo.InternalAddressVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -122,6 +123,30 @@ public class AddressServiceImpl implements AddressService {
         }
 
         addressMapper.deleteById(addressId);
+    }
+
+    @Override
+    public InternalAddressVO getInternalAddress(Long userId, Long addressId) {
+        Address address = addressMapper.selectById(addressId);
+        if (address == null) {
+            throw new BusinessException(ErrorCode.ADDRESS_NOT_FOUND);
+        }
+
+        if (!userId.equals(address.getUserId())) {
+            throw new BusinessException(ErrorCode.ADDRESS_NOT_OWNED);
+        }
+
+        InternalAddressVO vo = new InternalAddressVO();
+        vo.setId(address.getId());
+        vo.setUserId(address.getUserId());
+        vo.setReceiverName(address.getReceiverName());
+        vo.setReceiverPhone(address.getReceiverPhone());
+        vo.setProvince(address.getProvince());
+        vo.setCity(address.getCity());
+        vo.setDistrict(address.getDistrict());
+        vo.setDetailAddress(address.getDetailAddress());
+
+        return vo;
     }
 
     private AddressResponse toResponse(Address address) {

@@ -1,10 +1,13 @@
 package org.michael.user.controller;
 
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.michael.common.result.Result;
 import org.michael.user.dto.UserBasicInfo;
+import org.michael.user.service.AddressService;
 import org.michael.user.service.UserService;
+import org.michael.user.vo.InternalAddressVO;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,10 +29,25 @@ import java.time.LocalDateTime;
 public class InternalUserController {
 
     private final UserService userService;
+    private final AddressService addressService;
 
     @GetMapping("/{id}")
     public Result<UserBasicInfo> getUserBasicInfo(@PathVariable Long id) {
         log.info("GET /internal/users/{} 时间：{}", id, LocalDateTime.now());
         return Result.ok(userService.getUserBasicInfo(id));
+    }
+
+    @GetMapping("/{userId}/addresses/{addressId}")
+    public Result<InternalAddressVO> getAddress(
+            @PathVariable
+            @Min(value = 1, message = "用户ID必须大于0")
+            Long userId,
+
+            @PathVariable
+            @Min(value = 1, message = "地址ID必须大于0")
+            Long addressId
+    ) {
+        log.info("GET /internal/users/{userId}/addresses/{addressId} userId={}, addressId={}, 时间:{}", userId, addressId, LocalDateTime.now());
+        return Result.ok(addressService.getInternalAddress(userId, addressId));
     }
 }

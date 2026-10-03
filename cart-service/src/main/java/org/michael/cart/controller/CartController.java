@@ -78,6 +78,6 @@ public class CartController {
             CartRemoveItemsDTO dto
     ) {
         log.info("POST /cart/remove-items dto={}, 时间:{}", dto, LocalDateTime.now());
-        return Result.ok(cartService.removeItems(dto.getUserId(), , dto.getSkuIds()));
+        return Result.ok(cartService.removeItems(dto.getUserId(), dto.getSkuIds()));
     }
 }

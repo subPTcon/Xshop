@@ -2,6 +2,7 @@ package org.michael.user.service;
 
 import org.michael.user.dto.AddAddressRequest;
 import org.michael.user.dto.AddressResponse;
+import org.michael.user.vo.InternalAddressVO;
 
 import java.util.List;
 
@@ -28,4 +29,6 @@ public interface AddressService {
      * 删除收货地址。同样会校验归属关系，防止越权删除他人地址
      */
     void deleteAddress(Long userId, Long addressId);
+
+    InternalAddressVO getInternalAddress(Long userId, Long addressId);
 }
