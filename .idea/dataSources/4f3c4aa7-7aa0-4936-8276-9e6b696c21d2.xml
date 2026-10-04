@@ -22,7 +22,7 @@
     <schema id="15" parent="1" name="7"/>
     <schema id="16" parent="1" name="8"/>
     <schema id="17" parent="1" name="9"/>
-    <hash-table id="18" parent="2" name="cart:1"/>
-    <string id="19" parent="2" name="token:eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIxIiwidXNlcm5hbWUiOiJNaWNoYWVsIiwiaWF0IjoxNzkwOTQ0MTYzLCJleHAiOjE3OTA5NTEzNjN9.OgJ8mmx659vG92-pLTnYawgWqllpXgDre-4vaU3qzvFOYg0eDZeJUYIxlurBDpmg"/>
+    <string id="18" parent="2" name="order:token:1"/>
+    <string id="19" parent="2" name="token:eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIxIiwidXNlcm5hbWUiOiJNaWNoYWVsIiwiaWF0IjoxNzkxMTM4NDQ5LCJleHAiOjE3OTExNDU2NDl9.pTDJV3wVSwuqFA3b5daL7F4THP9-xoiUo8XkzVoCg5OjbURZcaUnpFr0vXlUIVnM"/>
   </database-model>
 </dataSource>

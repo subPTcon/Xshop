@@ -19,6 +19,7 @@ import org.michael.order.pojo.OrderItem;
 import org.michael.order.service.OrderPersistenceService;
 import org.michael.order.service.OrderService;
 import org.michael.order.vo.OrderCreateVO;
+import org.michael.order.vo.OrderTokenVO;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -100,6 +102,21 @@ public class OrderServiceImpl implements OrderService {
         removeCartItems(userId, skuIds);
 
         return new OrderCreateVO(orderNo, totalAmount);
+    }
+
+    @Override
+    public OrderTokenVO generateOrderToken(Long userId) {
+        String token = UUID.randomUUID().toString();
+        String key = OrderRedisConstant.tokenKey(userId);
+        redisTemplate.opsForValue()
+                .set(
+                        key,
+                        token,
+                        OrderRedisConstant.ORDER_TOKEN_EXPIRE_MINUTES,
+                        TimeUnit.MINUTES
+                );
+        log.info("生成下单防重Token, userId={}", userId);
+        return new OrderTokenVO(token);
     }
 
     private void checkAndConsumeToken(Long userId, String token) {
@@ -215,8 +232,8 @@ public class OrderServiceImpl implements OrderService {
         for (Map.Entry<Long, Integer> entry: itemCountMap.entrySet()) {
             InventoryReserveRequest request = new InventoryReserveRequest(entry.getKey(), orderNo, entry.getValue());
             try {
-                Result<Boolean> result = inventoryClient.reserve(request);
-                if (result == null || result.getData() == null || !Boolean.TRUE.equals(result.getData())) {
+                Result<InventoryReserveResult> result = inventoryClient.reserve(request);
+                if (result == null || result.getData() == null || !Boolean.TRUE.equals(result.getData().getSuccess())) {
                     throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK);
                 }
 

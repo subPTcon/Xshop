@@ -1090,7 +1090,7 @@ user_db|schema||user_svc||UPDATE|G</Grants>
     </schema>
     <schema id="291" parent="1" name="order_db">
       <Current>1</Current>
-      <LastIntrospectionLocalTimestamp>2026-10-03.08:02:38</LastIntrospectionLocalTimestamp>
+      <LastIntrospectionLocalTimestamp>2026-10-04.19:27:11</LastIntrospectionLocalTimestamp>
       <CollationName>utf8mb4_unicode_ci</CollationName>
     </schema>
     <schema id="292" parent="1" name="performance_schema">
@@ -1137,7 +1137,7 @@ user_db|schema||user_svc||UPDATE|G</Grants>
       <CollationName>utf8mb4_unicode_ci</CollationName>
     </table>
     <column id="305" parent="303" name="id">
-      <AutoIncrement>1</AutoIncrement>
+      <AutoIncrement>2</AutoIncrement>
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>bigint unsigned|0s</StoredType>
@@ -1228,7 +1228,7 @@ create_time</ColNames>
       <UnderlyingIndexName>uk_order_no</UnderlyingIndexName>
     </key>
     <column id="323" parent="304" name="id">
-      <AutoIncrement>1</AutoIncrement>
+      <AutoIncrement>3</AutoIncrement>
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StoredType>bigint unsigned|0s</StoredType>

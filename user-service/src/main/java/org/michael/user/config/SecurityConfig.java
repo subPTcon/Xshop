@@ -21,7 +21,8 @@ public class SecurityConfig {
                                 "/addresses/add",
                                 "/addresses/list",
                                 "/addresses/update/{id}",
-                                "/addresses/delete/{id}"
+                                "/addresses/delete/{id}",
+                                "internal/**"
                                 ).permitAll() // 放行这两个接口
                         .anyRequest().authenticated()
                 )

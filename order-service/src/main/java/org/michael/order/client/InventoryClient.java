@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.michael.common.result.Result;
 import org.michael.order.client.dto.InventoryReleaseRequest;
 import org.michael.order.client.dto.InventoryReserveRequest;
+import org.michael.order.client.dto.InventoryReserveResult;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface InventoryClient {
 
     @PostMapping("/inventory/reserve")
-    Result<Boolean> reserve(@RequestBody InventoryReserveRequest request);
+    Result<InventoryReserveResult> reserve(@RequestBody InventoryReserveRequest request);
 
     @PostMapping("/inventory/release")
     Result<Boolean> release(@Valid @RequestBody InventoryReleaseRequest request);

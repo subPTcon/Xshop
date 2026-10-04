@@ -8,10 +8,8 @@ import org.michael.common.result.Result;
 import org.michael.order.dto.OrderCreateDTO;
 import org.michael.order.service.OrderService;
 import org.michael.order.vo.OrderCreateVO;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.michael.order.vo.OrderTokenVO;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
@@ -28,5 +26,12 @@ public class OrderController {
         log.info("POST /orders/create dto={}, 时间:{}", dto, LocalDateTime.now());
         Long userId = UserContext.getUserId();
         return Result.ok(orderService.createOrder(userId, dto));
+    }
+
+    @GetMapping("/token")
+    public Result<OrderTokenVO> getOrderToken() {
+        log.info("GET /orders/token 时间:{}", LocalDateTime.now());
+        Long userId = UserContext.getUserId();
+        return Result.ok(orderService.generateOrderToken(userId));
     }
 }
