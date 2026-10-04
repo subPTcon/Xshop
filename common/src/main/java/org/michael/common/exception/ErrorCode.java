@@ -51,6 +51,10 @@ public enum ErrorCode {
     CART_ITEM_COUNT_EXCEEDED(40930, "单个商品数量不能超过99"),
     CART_ITEM_LIMIT_EXCEEDED(40931, "购物车商品种类不能超过100"),
     SKU_NOT_AVAILABLE(40932, "SKU当前不可购买"),
+    ORDER_TOKEN_EXPIRED(40940, "下单Token已失效，请重新获取"),
+    ORDER_TOKEN_INVALID(40941, "下单Token无效"),
+    ORDER_ITEM_INVALID(40942, "订单商品不可购买"),
+    ORDER_CREATE_FAILED(50010, "订单创建失败"),
 
     // 500xx 系统错误类
     SYSTEM_ERROR(50000, "系统繁忙，请稍后重试"),

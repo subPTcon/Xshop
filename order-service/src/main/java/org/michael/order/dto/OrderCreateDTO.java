@@ -15,7 +15,6 @@ public class OrderCreateDTO {
     @Min(value = 1, message = "地址ID必须大于0")
     private Long addressId;
 
-
     @NotEmpty(message = "订单商品不能为空")
     @Valid
     private List<OrderItemCreateDTO> items;
