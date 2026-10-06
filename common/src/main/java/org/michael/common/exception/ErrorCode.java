@@ -61,6 +61,7 @@ public enum ErrorCode {
     ORDER_STATUS_INVALID(40943, "当前订单状态不允许执行该操作"),
     PAYMENT_CREATE_CONFLICT(40950, "支付单创建冲突"),
     PAYMENT_STATUS_INVALID(40951, "当前支付状态不允许执行该操作"),
+    PAYMENT_AMOUNT_INVALID(40952, "支付金额不一致"),
 
     // 500xx 系统错误类
     SYSTEM_ERROR(50000, "系统繁忙，请稍后重试"),

@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -18,6 +19,9 @@ public class PaymentCallbackDTO {
      */
     @NotNull(message = "支付状态不能为空")
     private Integer status;
+
+    @NotNull
+    private BigDecimal amount;
 
     private LocalDateTime payTime;
 

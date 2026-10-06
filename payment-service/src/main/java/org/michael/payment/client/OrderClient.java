@@ -25,4 +25,7 @@ public interface OrderClient {
             @RequestBody
             OrderPaidRequest request
     );
+
+    @PostMapping("/internal/orders/{orderNo}/payment-success")
+    Result<Boolean> paymentSuccess(@PathVariable("orderNo") String orderNo);
 }

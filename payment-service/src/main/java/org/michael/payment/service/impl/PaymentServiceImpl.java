@@ -120,40 +120,115 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         /**
-         * 3.已经支付成功
-         *
-         * 第三方支付平台可能反复通知
-         * 直接返回成功
+         * 3.校验金额
          */
-        if (PaymentStatus.SUCCESS.getCode().equals(payment.getStatus())) {
-            return Boolean.TRUE;
+        if (payment.getAmount().compareTo(dto.getAmount()) != 0) {
+            throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_INVALID);
         }
 
-        // 4.目前只允许待支付状态处理回调
-        if (!PaymentStatus.PENDING.getCode().equals(payment.getStatus())) {
-            throw new BusinessException(ErrorCode.PAYMENT_STATUS_INVALID);
-        }
-
-        // 5.支付失败
+        /**
+         * 4.处理支付失败
+         */
         if (PaymentStatus.FAILED.getCode().equals(dto.getStatus())) {
-            handlePaymentFailed(payment);
+            handleFailed(payment);
             return Boolean.TRUE;
         }
 
-        // 只接受成功/失败两个回调状态
+        /**
+         * 目前只接受SUCCESS/FAILED
+         */
         if (!PaymentStatus.SUCCESS.getCode().equals(dto.getStatus())) {
             throw new BusinessException(ErrorCode.PARAM_INVALID);
         }
 
         LocalDateTime payTime = dto.getPayTime() == null ? LocalDateTime.now() : dto.getPayTime();
 
-        // 6.条件更新支付单，只有 status = 0 才能变成1
-        int affected = paymentMapper.update(
+        /**
+         * 5.更新状态 PENDING -> SUCCESS
+         */
+        if (PaymentStatus.PENDING.getCode().equals(payment.getStatus())) {
+            int affected = paymentMapper.update(
+                    null,
+                    new LambdaUpdateWrapper<Payment>()
+                            .eq(
+                                    Payment::getPaymentNo,
+                                    payment.getPaymentNo()
+                            )
+                            .eq(
+                                    Payment::getStatus,
+                                    PaymentStatus.PENDING.getCode()
+                            )
+                            .set(
+                                    Payment::getStatus,
+                                    PaymentStatus.SUCCESS.getCode()
+                            )
+                            .set(
+                                    Payment::getPayTime,
+                                    payTime
+                            )
+            );
+
+            /**
+             * affected = 0
+             * 很可能是另一个重复回调刚刚处理成功
+             */
+            if (affected == 0) {
+                Payment latest = paymentMapper.selectOne(
+                        new LambdaQueryWrapper<Payment>()
+                                .eq(
+                                        Payment::getPaymentNo,
+                                        payment.getPaymentNo()
+                                )
+                );
+                if (latest == null || !PaymentStatus.SUCCESS.getCode().equals(latest.getStatus())) {
+                    throw new BusinessException(ErrorCode.PAYMENT_STATUS_INVALID);
+                }
+            }
+        } else if (!PaymentStatus.SUCCESS.getCode().equals(payment.getStatus())) {
+            throw new BusinessException(ErrorCode.PAYMENT_STATUS_INVALID);
+        }
+
+        /**
+         * 6.即使payment本来已经SUCCESS
+         * 这里仍然重新通知order-service
+         */
+        notifyOrderPaymentSuccess(payment.getOrderNo());
+
+        return Boolean.TRUE;
+    }
+
+    private void notifyOrderPaymentSuccess(String orderNo) {
+        try {
+            Result<Boolean> result = orderClient.paymentSuccess(orderNo);
+            if (result == null || result.getData() == null || !Boolean.TRUE.equals(result.getData())) {
+                throw new BusinessException(ErrorCode.REMOTE_SERVICE_ERROR);
+            }
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("通知 order-service 支付成功失败，orderNo={}", orderNo, e);
+            throw new BusinessException(ErrorCode.REMOTE_SERVICE_ERROR);
+        }
+    }
+
+    private void handleFailed(Payment payment) {
+        /**
+         * 已经 SUCCESS 不能再被失败回调覆盖
+         */
+        if (PaymentStatus.SUCCESS.getCode().equals(payment.getStatus())) {
+            return;
+        }
+
+        if (!PaymentStatus.PENDING.getCode().equals(payment.getStatus())) {
+            return;
+        }
+
+        paymentMapper.update(
                 null,
                 new LambdaUpdateWrapper<Payment>()
                         .eq(
                                 Payment::getPaymentNo,
-                                dto.getPaymentNo()
+                                payment.getPaymentNo()
                         )
                         .eq(
                                 Payment::getStatus,
@@ -161,36 +236,9 @@ public class PaymentServiceImpl implements PaymentService {
                         )
                         .set(
                                 Payment::getStatus,
-                                PaymentStatus.SUCCESS.getCode()
-                        )
-                        .set(
-                                Payment::getPayTime,
-                                payTime
+                                PaymentStatus.FAILED.getCode()
                         )
         );
-
-        // 7.并发重复回调
-        if (affected == 0) {
-            Payment latest = paymentMapper.selectOne(
-                    new LambdaQueryWrapper<Payment>()
-                            .eq(
-                                    Payment::getPaymentNo,
-                                    dto.getPaymentNo()
-                            )
-            );
-            if (latest != null && PaymentStatus.SUCCESS.getCode().equals(latest.getStatus())) {
-                return Boolean.TRUE;
-            }
-
-            throw new BusinessException(ErrorCode.PAYMENT_STATUS_INVALID);
-        }
-
-        // 8.通知订单服务
-        notifyOrderPaid(payment.getOrderNo(), payTime);
-
-        log.info("支付成功回调处理完成，paymentNo={}, orderNo={}", payment.getPaymentNo(), payment.getOrderNo());
-
-        return Boolean.TRUE;
     }
 
     @Override
@@ -221,7 +269,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private void notifyOrderPaid(String orderNo, LocalDateTime payTime) {
         try {
-            Result<Boolean> result = orderClient.markPaid(orderNo, new OrderPaidRequest(payTime));
+            Result<Boolean> result = orderClient.paymentSuccess(orderNo);
             if (result == null || result.getData() == null || !Boolean.TRUE.equals(result.getData())) {
                 throw new BusinessException(ErrorCode.REMOTE_SERVICE_ERROR);
             }

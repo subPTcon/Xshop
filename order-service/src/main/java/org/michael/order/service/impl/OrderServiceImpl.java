@@ -447,66 +447,66 @@ public class OrderServiceImpl implements OrderService {
         return vo;
     }
 
-    @Override
-    public Boolean markPaid(String orderNo, LocalDateTime payTime) {
-        Order order = orderMapper.selectOne(
-                new LambdaQueryWrapper<Order>()
-                        .eq(
-                                Order::getOrderNo,
-                                orderNo
-                        )
-        );
-        if (order == null) {
-            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
-        }
-
-        // 已经支付，重复通知直接成功
-        if (OrderStatus.PAID.getCode().equals(order.getStatus())) {
-            return Boolean.TRUE;
-        }
-
-        // 已取消等其他状态不能再支付
-        if (!OrderStatus.PENDING_PAYMENT.getCode().equals(order.getStatus())) {
-            throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
-        }
-
-        int affected = orderMapper.update(
-                null,
-                new LambdaUpdateWrapper<Order>()
-                        .eq(
-                                Order::getOrderNo,
-                                orderNo
-                        )
-                        .eq(
-                                Order::getStatus,
-                                OrderStatus.PENDING_PAYMENT.getCode()
-                        )
-                        .set(
-                                Order::getStatus,
-                                OrderStatus.PAID.getCode()
-                        )
-                        .set(
-                                Order::getPayTime,
-                                payTime
-                        )
-        );
-        if (affected == 0) {
-            // 有可能另一个支付回调已经完成
-            Order latest = orderMapper.selectOne(
-                    new LambdaQueryWrapper<Order>()
-                            .eq(
-                                    Order::getOrderNo,
-                                    orderNo
-                            )
-            );
-            if (latest != null && OrderStatus.PAID.getCode().equals(latest.getStatus())) {
-                return Boolean.TRUE;
-            }
-            throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
-        }
-
-        return Boolean.TRUE;
-    }
+//    @Override
+//    public Boolean markPaid(String orderNo, LocalDateTime payTime) {
+//        Order order = orderMapper.selectOne(
+//                new LambdaQueryWrapper<Order>()
+//                        .eq(
+//                                Order::getOrderNo,
+//                                orderNo
+//                        )
+//        );
+//        if (order == null) {
+//            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+//        }
+//
+//        // 已经支付，重复通知直接成功
+//        if (OrderStatus.SHIPPED.getCode().equals(order.getStatus())) {
+//            return Boolean.TRUE;
+//        }
+//
+//        // 已取消等其他状态不能再支付
+//        if (!OrderStatus.PENDING_PAYMENT.getCode().equals(order.getStatus())) {
+//            throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
+//        }
+//
+//        int affected = orderMapper.update(
+//                null,
+//                new LambdaUpdateWrapper<Order>()
+//                        .eq(
+//                                Order::getOrderNo,
+//                                orderNo
+//                        )
+//                        .eq(
+//                                Order::getStatus,
+//                                OrderStatus.PENDING_PAYMENT.getCode()
+//                        )
+//                        .set(
+//                                Order::getStatus,
+//                                OrderStatus.PAID.getCode()
+//                        )
+//                        .set(
+//                                Order::getPayTime,
+//                                payTime
+//                        )
+//        );
+//        if (affected == 0) {
+//            // 有可能另一个支付回调已经完成
+//            Order latest = orderMapper.selectOne(
+//                    new LambdaQueryWrapper<Order>()
+//                            .eq(
+//                                    Order::getOrderNo,
+//                                    orderNo
+//                            )
+//            );
+//            if (latest != null && OrderStatus.PAID.getCode().equals(latest.getStatus())) {
+//                return Boolean.TRUE;
+//            }
+//            throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
+//        }
+//
+//        return Boolean.TRUE;
+//    }
 
     @Override
     public Boolean markShipped(String orderNo) {
@@ -559,6 +559,133 @@ public class OrderServiceImpl implements OrderService {
             }
 
             throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
+        }
+
+        return Boolean.TRUE;
+    }
+
+    @Override
+    public Boolean handlePaymentSuccess(String orderNo) {
+
+        Order order = orderMapper.selectOne(
+                new LambdaQueryWrapper<Order>()
+                        .eq(
+                                Order::getOrderNo,
+                                orderNo
+                        )
+        );
+
+        if (order == null) {
+            throw new BusinessException(
+                    ErrorCode.ORDER_NOT_FOUND
+            );
+        }
+
+        /*
+         * 重复支付通知
+         */
+        if (OrderStatus.PENDING_SHIPMENT
+                .getCode()
+                .equals(order.getStatus())) {
+
+            return Boolean.TRUE;
+        }
+
+        /*
+         * 只有待支付订单才能处理支付成功
+         */
+        if (!OrderStatus.PENDING_PAYMENT
+                .getCode()
+                .equals(order.getStatus())) {
+
+            throw new BusinessException(
+                    ErrorCode.ORDER_STATUS_INVALID
+            );
+        }
+
+        /*
+         * 1. 查询订单商品
+         */
+        List<OrderItem> items =
+                orderItemMapper.selectList(
+                        new LambdaQueryWrapper<OrderItem>()
+                                .eq(
+                                        OrderItem::getOrderNo,
+                                        orderNo
+                                )
+                );
+
+        /*
+         * 2. 确认库存
+         *
+         * RESERVED -> CONFIRMED
+         */
+        for (OrderItem item : items) {
+
+            Boolean success =
+                    inventoryClient.confirm(new InventoryConfirmRequest(item.getSkuId(), item.getOrderNo())
+                    ).getData();
+
+            if (!Boolean.TRUE.equals(success)) {
+
+                throw new BusinessException(
+                        ErrorCode.REMOTE_SERVICE_ERROR
+                );
+            }
+        }
+
+        /*
+         * 3. 所有库存确认成功以后，
+         * 再推进订单状态
+         */
+        int affected =
+                orderMapper.update(
+                        null,
+                        new LambdaUpdateWrapper<Order>()
+                                .eq(
+                                        Order::getOrderNo,
+                                        orderNo
+                                )
+                                .eq(
+                                        Order::getStatus,
+                                        OrderStatus.PENDING_PAYMENT.getCode()
+                                )
+                                .set(
+                                        Order::getStatus,
+                                        OrderStatus.PENDING_SHIPMENT.getCode()
+                                )
+                                .set(
+                                        Order::getPayTime,
+                                        LocalDateTime.now()
+                                )
+                );
+
+        if (affected == 0) {
+
+            /*
+             * 防并发重复通知：
+             * 再查一次看看是不是另一个请求已经成功推进。
+             */
+            Order latest =
+                    orderMapper.selectOne(
+                            new LambdaQueryWrapper<Order>()
+                                    .eq(
+                                            Order::getOrderNo,
+                                            orderNo
+                                    )
+                    );
+
+            if (latest != null
+                    && OrderStatus.PENDING_SHIPMENT
+                    .getCode()
+                    .equals(latest.getStatus())) {
+
+                return Boolean.TRUE;
+            }
+
+            throw new BusinessException(
+                    ErrorCode.ORDER_STATUS_INVALID
+            );
         }
 
         return Boolean.TRUE;
