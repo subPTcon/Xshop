@@ -18,4 +18,6 @@ public interface OrderService {
     OrderPageVO getOrderList(Long userId, Integer status, Integer page, Integer size);
 
     Boolean cancelOrder(Long userId, String orderNo, OrderCancelDTO dto);
+
+    Boolean confirmOrder(Long userId, String orderNo);
 }

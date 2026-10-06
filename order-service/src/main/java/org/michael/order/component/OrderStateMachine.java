@@ -13,4 +13,10 @@ public class OrderStateMachine {
             throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
         }
     }
+
+    public void checkConfirm(Integer currentStatus) {
+        if (!OrderStatus.SHIPPED.getCode().equals(currentStatus)) {
+            throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
+        }
+    }
 }

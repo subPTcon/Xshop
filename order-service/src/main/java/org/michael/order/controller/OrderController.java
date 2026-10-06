@@ -82,4 +82,11 @@ public class OrderController {
         Long userId = UserContext.getUserId();
         return Result.ok(orderService.cancelOrder(userId, orderNo, dto));
     }
+
+    @PostMapping("/confirm/{orderNo}")
+    public Result<Boolean> confirmOrder(@PathVariable String orderNo) {
+        log.info("POST /orders/confirm/{orderNo} orderNo={}", orderNo);
+        Long userId = UserContext.getUserId();
+        return Result.ok(orderService.confirmOrder(userId, orderNo));
+    }
 }

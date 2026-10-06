@@ -345,6 +345,85 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    @Override
+    public Boolean confirmOrder(Long userId, String orderNo) {
+        // 1.查询订单
+        Order order = orderMapper.selectOne(
+                new LambdaQueryWrapper<Order>()
+                        .eq(
+                                Order::getOrderNo,
+                                orderNo
+                        )
+                        .eq(
+                                Order::getUserId,
+                                userId
+                        )
+        );
+        if (order == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+
+        // 2.已完成，直接返回成功，保证接口幂等
+        if (OrderStatus.COMPLETED.getCode().equals(order.getStatus())) {
+            return Boolean.TRUE;
+        }
+
+        // 3.校验状态，只有已发货才能确认收货
+        orderStateMachine.checkConfirm(order.getStatus());
+
+        /**
+         * 4.条件更新
+         *
+         * 只有数据库当前仍然是 SHIPPED(3)
+         * 才允许变成COMPLETED(4)
+         */
+        int affected = orderMapper.update(
+                null,
+                new LambdaQueryWrapper<Order>()
+                        .eq(
+                                Order::getOrderNo,
+                                orderNo
+                        )
+                        .eq(
+                                Order::getUserId,
+                                userId
+                        )
+                        .eq(
+                                Order::getStatus,
+                                OrderStatus.SHIPPED.getCode()
+                        )
+                        .eq(
+                                Order::getStatus,
+                                OrderStatus.COMPLETED.getCode()
+                        )
+        );
+
+        // 5.更新失败说明状态发生并发变化
+        if (affected == 0) {
+            Order latestOrder = orderMapper.selectOne(
+                    new LambdaQueryWrapper<Order>()
+                            .eq(
+                                    Order::getOrderNo,
+                                    orderNo
+                            )
+                            .eq(
+                                    Order::getUserId,
+                                    userId
+                            )
+            );
+
+            // 如果另一个确认请求已经成功，当前请求仍然返回成功
+            if (latestOrder != null && OrderStatus.COMPLETED.getCode().equals(latestOrder.getStatus())) {
+                return Boolean.TRUE;
+            }
+
+            throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
+        }
+
+        log.info("订单确认收货成功, userId={}, orderNo={}", userId, orderNo);
+        return Boolean.TRUE;
+    }
+
     private void checkAndConsumeToken(Long userId, String token) {
         String key = OrderRedisConstant.tokenKey(userId);
         DefaultRedisScript<Long> script = new DefaultRedisScript<>();
