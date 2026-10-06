@@ -23,4 +23,6 @@ public interface OrderService {
     InternalOrderVO getInternalOrder(String orderNo);
 
     Boolean markPaid(String orderNo, LocalDateTime payTime);
+
+    Boolean markShipped(String orderNo);
 }

@@ -508,6 +508,62 @@ public class OrderServiceImpl implements OrderService {
         return Boolean.TRUE;
     }
 
+    @Override
+    public Boolean markShipped(String orderNo) {
+        Order order = orderMapper.selectOne(
+                new LambdaQueryWrapper<Order>()
+                        .eq(
+                                Order::getOrderNo,
+                                orderNo
+                        )
+        );
+        if (order == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+
+        // 已经发货，重复调用，直接返回成功
+        if (OrderStatus.SHIPPED.getCode().equals(order.getStatus())) {
+            return Boolean.TRUE;
+        }
+
+        if (!OrderStatus.PENDING_SHIPMENT.getCode().equals(order.getStatus())) {
+            throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
+        }
+
+        int affected = orderMapper.update(
+                null,
+                new LambdaUpdateWrapper<Order>()
+                        .eq(
+                                Order::getOrderNo,
+                                orderNo
+                        )
+                        .eq(
+                                Order::getStatus,
+                                OrderStatus.PENDING_SHIPMENT.getCode()
+                        )
+                        .set(
+                                Order::getStatus,
+                                OrderStatus.SHIPPED.getCode()
+                        )
+        );
+        if (affected == 0) {
+            Order latest = orderMapper.selectOne(
+                    new LambdaQueryWrapper<Order>()
+                            .eq(
+                                    Order::getOrderNo,
+                                    orderNo
+                            )
+            );
+            if (latest != null && OrderStatus.SHIPPED.getCode().equals(latest.getStatus())) {
+                return Boolean.TRUE;
+            }
+
+            throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
+        }
+
+        return Boolean.TRUE;
+    }
+
     private void checkAndConsumeToken(Long userId, String token) {
         String key = OrderRedisConstant.tokenKey(userId);
         DefaultRedisScript<Long> script = new DefaultRedisScript<>();
