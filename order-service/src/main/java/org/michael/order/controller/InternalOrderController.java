@@ -3,12 +3,10 @@ package org.michael.order.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.michael.common.result.Result;
+import org.michael.order.dto.OrderPaidDTO;
 import org.michael.order.service.OrderService;
 import org.michael.order.vo.InternalOrderVO;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
@@ -27,5 +25,14 @@ public class InternalOrderController {
     ) {
         log.info("GET /internal/orders/{orderNo} orderNo={}, 时间:{}", orderNo, LocalDateTime.now());
         return Result.ok(orderService.getInternalOrder(orderNo));
+    }
+
+    @PostMapping("/{orderNo}/paid")
+    public Result<Boolean> markPaid(
+            @PathVariable String orderNo,
+            @RequestBody OrderPaidDTO dto
+    ) {
+        log.info("POST /internal/orders/{orderNo}/paid orderNo={}, dto={}, 时间:{}", orderNo, dto, LocalDateTime.now());
+        return Result.ok(orderService.markPaid(orderNo, dto.getPayTime()));
     }
 }

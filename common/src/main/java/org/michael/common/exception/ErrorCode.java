@@ -23,6 +23,7 @@ public enum ErrorCode {
     FORBIDDEN(40300, "无权限执行该操作"),
     ADDRESS_NOT_OWNED(40301, "无权限操作他人的收货地址"),
     ORDER_NOT_OWNED(40310, "无权访问该订单"),
+    PAYMENT_SIGN_INVALID(40350, "支付回调签名无效"),
 
     // 404xx 资源不存在类
     USER_NOT_FOUND(40400, "用户不存在"),

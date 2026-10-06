@@ -33,6 +33,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -444,6 +445,67 @@ public class OrderServiceImpl implements OrderService {
         vo.setTotalAmount(order.getTotalAmount());
         vo.setStatus(order.getStatus());
         return vo;
+    }
+
+    @Override
+    public Boolean markPaid(String orderNo, LocalDateTime payTime) {
+        Order order = orderMapper.selectOne(
+                new LambdaQueryWrapper<Order>()
+                        .eq(
+                                Order::getOrderNo,
+                                orderNo
+                        )
+        );
+        if (order == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+
+        // 已经支付，重复通知直接成功
+        if (OrderStatus.PAID.getCode().equals(order.getStatus())) {
+            return Boolean.TRUE;
+        }
+
+        // 已取消等其他状态不能再支付
+        if (!OrderStatus.PENDING_PAYMENT.getCode().equals(order.getStatus())) {
+            throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
+        }
+
+        int affected = orderMapper.update(
+                null,
+                new LambdaUpdateWrapper<Order>()
+                        .eq(
+                                Order::getOrderNo,
+                                orderNo
+                        )
+                        .eq(
+                                Order::getStatus,
+                                OrderStatus.PENDING_PAYMENT.getCode()
+                        )
+                        .set(
+                                Order::getStatus,
+                                OrderStatus.PAID.getCode()
+                        )
+                        .set(
+                                Order::getPayTime,
+                                payTime
+                        )
+        );
+        if (affected == 0) {
+            // 有可能另一个支付回调已经完成
+            Order latest = orderMapper.selectOne(
+                    new LambdaQueryWrapper<Order>()
+                            .eq(
+                                    Order::getOrderNo,
+                                    orderNo
+                            )
+            );
+            if (latest != null && OrderStatus.PAID.getCode().equals(latest.getStatus())) {
+                return Boolean.TRUE;
+            }
+            throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
+        }
+
+        return Boolean.TRUE;
     }
 
     private void checkAndConsumeToken(Long userId, String token) {

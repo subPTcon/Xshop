@@ -4,6 +4,8 @@ import org.michael.order.dto.OrderCancelDTO;
 import org.michael.order.dto.OrderCreateDTO;
 import org.michael.order.vo.*;
 
+import java.time.LocalDateTime;
+
 public interface OrderService {
 
     OrderCreateVO createOrder(Long userId, OrderCreateDTO dto);
@@ -19,4 +21,6 @@ public interface OrderService {
     Boolean confirmOrder(Long userId, String orderNo);
 
     InternalOrderVO getInternalOrder(String orderNo);
+
+    Boolean markPaid(String orderNo, LocalDateTime payTime);
 }
