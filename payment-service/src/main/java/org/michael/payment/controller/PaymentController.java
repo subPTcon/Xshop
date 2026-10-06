@@ -9,10 +9,8 @@ import org.michael.payment.dto.PaymentCallbackDTO;
 import org.michael.payment.dto.PaymentCreateDTO;
 import org.michael.payment.service.PaymentService;
 import org.michael.payment.vo.PaymentCreateVO;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.michael.payment.vo.PaymentDetailVO;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
@@ -43,5 +41,12 @@ public class PaymentController {
     ) {
         log.info("POST /payments/callback dto={}, 时间:{}", dto, LocalDateTime.now());
         return Result.ok(paymentService.handleCallback(dto));
+    }
+
+    @GetMapping("/{paymentNo}")
+    public Result<PaymentDetailVO> getPayment(@PathVariable String paymentNo) {
+        log.info("GET /payments/{paymentNo} paymentNo={}", paymentNo);
+        Long userId = UserContext.getUserId();
+        return Result.ok(paymentService.getPayment(userId, paymentNo));
     }
 }

@@ -18,6 +18,7 @@ import org.michael.payment.mapper.PaymentMapper;
 import org.michael.payment.pojo.Payment;
 import org.michael.payment.service.PaymentService;
 import org.michael.payment.vo.PaymentCreateVO;
+import org.michael.payment.vo.PaymentDetailVO;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
@@ -190,6 +191,32 @@ public class PaymentServiceImpl implements PaymentService {
         log.info("支付成功回调处理完成，paymentNo={}, orderNo={}", payment.getPaymentNo(), payment.getOrderNo());
 
         return Boolean.TRUE;
+    }
+
+    @Override
+    public PaymentDetailVO getPayment(Long userId, String paymentNo) {
+        Payment payment = paymentMapper.selectOne(
+                new LambdaQueryWrapper<Payment>()
+                        .eq(
+                                Payment::getPaymentNo,
+                                paymentNo
+                        )
+                        .eq(
+                                Payment::getUserId,
+                                userId
+                        )
+        );
+        if (payment == null) {
+            throw new BusinessException(ErrorCode.PAYMENT_NOT_FOUND);
+        }
+
+        PaymentDetailVO vo = new PaymentDetailVO();
+        vo.setPaymentNo(payment.getPaymentNo());
+        vo.setOrderNo(payment.getOrderNo());
+        vo.setAmount(payment.getAmount());
+        vo.setStatus(payment.getStatus());
+        vo.setPayChannel(payment.getPayChannel());
+        return vo;
     }
 
     private void notifyOrderPaid(String orderNo, LocalDateTime payTime) {
