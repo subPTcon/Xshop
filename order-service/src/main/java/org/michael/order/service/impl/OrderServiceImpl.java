@@ -424,6 +424,28 @@ public class OrderServiceImpl implements OrderService {
         return Boolean.TRUE;
     }
 
+    @Override
+    public InternalOrderVO getInternalOrder(String orderNo) {
+        Order order = orderMapper.selectOne(
+                new LambdaQueryWrapper<Order>()
+                        .eq(
+                                Order::getOrderNo,
+                                orderNo
+                        )
+        );
+
+        if (order == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+
+        InternalOrderVO vo = new InternalOrderVO();
+        vo.setOrderNo(order.getOrderNo());
+        vo.setUserId(order.getUserId());
+        vo.setTotalAmount(order.getTotalAmount());
+        vo.setStatus(order.getStatus());
+        return vo;
+    }
+
     private void checkAndConsumeToken(Long userId, String token) {
         String key = OrderRedisConstant.tokenKey(userId);
         DefaultRedisScript<Long> script = new DefaultRedisScript<>();

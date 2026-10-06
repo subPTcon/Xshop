@@ -2,10 +2,7 @@ package org.michael.order.service;
 
 import org.michael.order.dto.OrderCancelDTO;
 import org.michael.order.dto.OrderCreateDTO;
-import org.michael.order.vo.OrderCreateVO;
-import org.michael.order.vo.OrderDetailVO;
-import org.michael.order.vo.OrderPageVO;
-import org.michael.order.vo.OrderTokenVO;
+import org.michael.order.vo.*;
 
 public interface OrderService {
 
@@ -20,4 +17,6 @@ public interface OrderService {
     Boolean cancelOrder(Long userId, String orderNo, OrderCancelDTO dto);
 
     Boolean confirmOrder(Long userId, String orderNo);
+
+    InternalOrderVO getInternalOrder(String orderNo);
 }

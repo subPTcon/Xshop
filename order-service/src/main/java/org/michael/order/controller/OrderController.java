@@ -85,7 +85,7 @@ public class OrderController {
 
     @PostMapping("/confirm/{orderNo}")
     public Result<Boolean> confirmOrder(@PathVariable String orderNo) {
-        log.info("POST /orders/confirm/{orderNo} orderNo={}", orderNo);
+        log.info("POST /orders/confirm/{orderNo} orderNo={}, 时间:{}", orderNo, LocalDateTime.now());
         Long userId = UserContext.getUserId();
         return Result.ok(orderService.confirmOrder(userId, orderNo));
     }

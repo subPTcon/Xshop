@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="f83472c5-673d-4ca7-8997-ba143d7af52b" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/component/OrderStateMachine.java" beforeDir="false" afterPath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/component/OrderStateMachine.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/controller/OrderController.java" beforeDir="false" afterPath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/controller/OrderController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/service/OrderService.java" beforeDir="false" afterPath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/service/OrderService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/service/impl/OrderServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/service/impl/OrderServiceImpl.java" afterDir="false" />
@@ -201,8 +200,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Spring Boot.InventoryApplication" />
         <item itemvalue="Spring Boot.ProductApplication" />
+        <item itemvalue="Spring Boot.InventoryApplication" />
         <item itemvalue="Spring Boot.CartApplication" />
         <item itemvalue="Spring Boot.UserApplication" />
         <item itemvalue="Spring Boot.OrderApplication" />
@@ -245,7 +244,7 @@
       <workItem from="1790865504077" duration="1900000" />
       <workItem from="1790940889740" duration="29295000" />
       <workItem from="1791134038816" duration="10128000" />
-      <workItem from="1791170968908" duration="8932000" />
+      <workItem from="1791170968908" duration="10306000" />
     </task>
     <servers />
   </component>
