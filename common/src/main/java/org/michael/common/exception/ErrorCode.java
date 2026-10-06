@@ -22,6 +22,7 @@ public enum ErrorCode {
     // 403xx 权限类
     FORBIDDEN(40300, "无权限执行该操作"),
     ADDRESS_NOT_OWNED(40301, "无权限操作他人的收货地址"),
+    ORDER_NOT_OWNED(40310, "无权访问该订单"),
 
     // 404xx 资源不存在类
     USER_NOT_FOUND(40400, "用户不存在"),
@@ -32,6 +33,7 @@ public enum ErrorCode {
     INVENTORY_NOT_FOUND(40420, "库存记录不存在"),
     INVENTORY_RESERVATION_NOT_FOUND(40421, "库存预占记录不存在"),
     CART_ITEM_NOT_FOUND(40430, "购物车商品不存在"),
+    ORDER_NOT_FOUND(40440, "订单不存在"),
 
     // 409xx 业务冲突类
     USERNAME_EXISTS(40900, "该用户名已被注册"),
@@ -54,12 +56,13 @@ public enum ErrorCode {
     ORDER_TOKEN_EXPIRED(40940, "下单Token已失效，请重新获取"),
     ORDER_TOKEN_INVALID(40941, "下单Token无效"),
     ORDER_ITEM_INVALID(40942, "订单商品不可购买"),
-    ORDER_CREATE_FAILED(50010, "订单创建失败"),
+    ORDER_STATUS_INVALID(40943, "当前订单状态不允许执行该操作"),
 
     // 500xx 系统错误类
     SYSTEM_ERROR(50000, "系统繁忙，请稍后重试"),
     REMOTE_SERVICE_ERROR(50001, "依赖的服务暂时不可用"),
-    DATABASE_ERROR(50002, "数据操作失败");
+    DATABASE_ERROR(50002, "数据操作失败"),
+    ORDER_CREATE_FAILED(50010, "订单创建失败");
 
     private final int code;
     private final String message;

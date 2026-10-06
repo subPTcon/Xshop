@@ -1,6 +1,9 @@
 package org.michael.order.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.michael.common.exception.BusinessException;
@@ -11,15 +14,19 @@ import org.michael.order.client.InventoryClient;
 import org.michael.order.client.ProductClient;
 import org.michael.order.client.UserClient;
 import org.michael.order.client.dto.*;
+import org.michael.order.component.OrderStateMachine;
 import org.michael.order.constant.OrderRedisConstant;
+import org.michael.order.dto.OrderCancelDTO;
 import org.michael.order.dto.OrderCreateDTO;
 import org.michael.order.dto.OrderItemCreateDTO;
+import org.michael.order.enums.OrderStatus;
+import org.michael.order.mapper.OrderItemMapper;
+import org.michael.order.mapper.OrderMapper;
 import org.michael.order.pojo.Order;
 import org.michael.order.pojo.OrderItem;
 import org.michael.order.service.OrderPersistenceService;
 import org.michael.order.service.OrderService;
-import org.michael.order.vo.OrderCreateVO;
-import org.michael.order.vo.OrderTokenVO;
+import org.michael.order.vo.*;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -36,6 +43,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
+    private final OrderMapper orderMapper;
+
+    private final OrderItemMapper orderItemMapper;
+
     private final StringRedisTemplate redisTemplate;
 
     private final UserClient userClient;
@@ -46,6 +57,7 @@ public class OrderServiceImpl implements OrderService {
 
     private final CartClient cartClient;
     private final OrderPersistenceService orderPersistenceService;
+    private final OrderStateMachine orderStateMachine;
 
     @Override
     public OrderCreateVO createOrder(Long userId, OrderCreateDTO dto) {
@@ -117,6 +129,220 @@ public class OrderServiceImpl implements OrderService {
                 );
         log.info("生成下单防重Token, userId={}", userId);
         return new OrderTokenVO(token);
+    }
+
+    @Override
+    public OrderDetailVO getOrderDetail(Long userId, String orderNo) {
+        // 1.查订单
+        Order order = orderMapper.selectOne(
+                new LambdaQueryWrapper<Order>()
+                        .eq(
+                                Order::getOrderNo,
+                                orderNo
+                        )
+                        .eq(
+                                Order::getUserId,
+                                userId
+                        )
+        );
+        if (order == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+
+        // 2.查询订单明细
+        List<OrderItem> orderItems = orderItemMapper.selectList(
+                new LambdaQueryWrapper<OrderItem>()
+                        .eq(
+                                OrderItem::getOrderNo,
+                                orderNo
+                        )
+                        .orderByAsc(
+                                OrderItem::getId
+                        )
+        );
+
+        // 3.组装VO
+        OrderDetailVO vo = new OrderDetailVO();
+        vo.setOrderNo(order.getOrderNo());
+        vo.setTotalAmount(order.getTotalAmount());
+        vo.setStatus(order.getStatus());
+        vo.setReceiverName(order.getReceiverName());
+        vo.setReceiverPhone(order.getReceiverPhone());
+        vo.setReceiverAddress(order.getReceiverAddress());
+        vo.setPayTime(order.getPayTime());
+        vo.setCreateTime(order.getCreateTime());
+        List<OrderItemVO> itemVOList = orderItems.stream()
+                .map(item -> {
+                    OrderItemVO itemVO = new OrderItemVO();
+                    itemVO.setSkuId(item.getSkuId());
+                    itemVO.setProductTitle(item.getProductTitle());
+                    itemVO.setSkuSpec(item.getSkuSpec());
+                    itemVO.setPrice(item.getPrice());
+                    itemVO.setCount(item.getCount());
+                    return itemVO;
+                }).toList();
+
+        vo.setItems(itemVOList);
+        return vo;
+    }
+
+    @Override
+    public OrderPageVO getOrderList(
+            Long userId,
+            Integer status,
+            Integer page,
+            Integer size
+    ) {
+        Page<Order> pageParam = new Page<>(page, size);
+        LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<Order>()
+                .eq(
+                        Order::getUserId,
+                        userId
+                )
+                .orderByDesc(
+                        Order::getCreateTime
+                );
+
+        if (status != null) {
+            wrapper.eq(
+                    Order::getStatus,
+                    status
+            );
+        }
+        Page<Order> orderPage = orderMapper.selectPage(pageParam, wrapper);
+        List<OrderListItemVO> list = orderPage.getRecords()
+                .stream()
+                .map(order -> {
+                    OrderListItemVO vo = new OrderListItemVO();
+                    vo.setOrderNo(order.getOrderNo());
+                    vo.setTotalAmount(order.getTotalAmount());
+                    vo.setStatus(order.getStatus());
+                    vo.setCreateTime(order.getCreateTime());
+
+                    return vo;
+                }).toList();
+
+        return new OrderPageVO(list, orderPage.getTotal());
+    }
+
+    @Override
+    public Boolean cancelOrder(Long userId, String orderNo, OrderCancelDTO dto) {
+        // 1.查询订单
+        Order order = orderMapper.selectOne(
+                new LambdaQueryWrapper<Order>()
+                        .eq(
+                                Order::getOrderNo,
+                                orderNo
+                        )
+                        .eq(
+                                Order::getUserId,
+                                userId
+                        )
+
+        );
+        if (order == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+
+        /**
+         * 2.已经取消
+         *
+         * 接口做成幂等
+         *
+         * 这里仍然重新执行一次库存释放
+         * 因为 inventory release 本身也应该幂等
+         *
+         * 如果上一次订单状态改成5成功，但是库存释放失败，用户再次取消就可以顺便补偿
+         */
+        if (OrderStatus.CANCELLED.getCode().equals(order.getStatus())) {
+            releaseOrderInventory(orderNo);
+            return Boolean.TRUE;
+        }
+
+        // 3.检查状态机
+        orderStateMachine.checkCancel(order.getStatus());
+
+        // 4.条件更新，只有 status = 0 才更新成5
+        LambdaUpdateWrapper<Order> wrapper = new LambdaUpdateWrapper<Order>()
+                .eq(
+                        Order::getOrderNo,
+                        orderNo
+                )
+                .eq(
+                        Order::getUserId,
+                        userId
+                )
+                .eq(
+                        Order::getStatus,
+                        OrderStatus.PENDING_PAYMENT.getCode()
+                )
+                .set(
+                        Order::getStatus,
+                        OrderStatus.CANCELLED.getCode()
+                )
+                .set(
+                        Order::getCancelReason,
+                        dto.getReason()
+                );
+        int affected = orderMapper.update(null, wrapper);
+
+        // 5.affected = 0 说明发生了并发状态变化
+        if (affected == 0) {
+            Order latestOrder = orderMapper.selectOne(
+                    new LambdaQueryWrapper<Order>()
+                            .eq(
+                                    Order::getOrderNo,
+                                    orderNo
+                            )
+                            .eq(
+                                    Order::getUserId,
+                                    userId
+                            )
+            );
+
+            if (latestOrder != null && OrderStatus.CANCELLED.getCode().equals(latestOrder.getStatus())) {
+                releaseOrderInventory(orderNo);
+                return Boolean.TRUE;
+            }
+
+            throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
+        }
+
+        // 6.状态修改成功，释放预占库存
+        releaseOrderInventory(orderNo);
+        log.info("订单取消成功, userId={}, orderNo={}, reason={}", userId, orderNo, dto.getReason());
+
+        return Boolean.TRUE;
+    }
+
+    private void releaseOrderInventory(String orderNo) {
+        List<OrderItem> items = orderItemMapper.selectList(
+                new LambdaQueryWrapper<OrderItem>()
+                        .eq(
+                                OrderItem::getOrderNo,
+                                orderNo
+                        )
+        );
+        for (OrderItem item: items) {
+            try {
+                Result<Boolean> result = inventoryClient.release(
+                        new InventoryReleaseRequest(
+                                item.getSkuId(),
+                                orderNo
+                        )
+                );
+
+                if (result == null || result.getData() == null || !Boolean.TRUE.equals(result.getData())) {
+                    throw new BusinessException(ErrorCode.REMOTE_SERVICE_ERROR);
+                }
+            } catch (BusinessException e) {
+                throw e;
+            } catch (Exception e) {
+                log.error("取消订单释放库存失败, orderNo={}, skuId={}", orderNo, item.getSkuId());
+
+                throw new BusinessException(ErrorCode.REMOTE_SERVICE_ERROR);
+            }
+        }
     }
 
     private void checkAndConsumeToken(Long userId, String token) {

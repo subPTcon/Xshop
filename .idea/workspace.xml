@@ -6,20 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="f83472c5-673d-4ca7-8997-ba143d7af52b" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/4f3c4aa7-7aa0-4936-8276-9e6b696c21d2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/4f3c4aa7-7aa0-4936-8276-9e6b696c21d2.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/a274c137-5b85-441c-a844-33f141474597.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/a274c137-5b85-441c-a844-33f141474597.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/ce54fb4a-e49d-4234-bd4d-27774cfd0bed.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/ce54fb4a-e49d-4234-bd4d-27774cfd0bed.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/order-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/order-service/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/client/InventoryClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/client/InventoryClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/constant/OrderRedisConstant.java" beforeDir="false" afterPath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/constant/OrderRedisConstant.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/src/main/java/org/michael/common/exception/ErrorCode.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/org/michael/common/exception/ErrorCode.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/controller/OrderController.java" beforeDir="false" afterPath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/controller/OrderController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/service/OrderService.java" beforeDir="false" afterPath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/service/OrderService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/service/impl/OrderServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/order-service/src/main/java/org/michael/order/service/impl/OrderServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/order-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/order-service/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/src/main/java/org/michael/user/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/java/org/michael/user/config/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/user-service/src/main/java/org/michael/user/config/WebMvcConfigurer.java" beforeDir="false" afterPath="$PROJECT_DIR$/user-service/src/main/java/org/michael/user/config/WebMvcConfig.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -111,8 +102,19 @@
         <option value="SpringBootApplicationConfigurationType" />
       </set>
     </option>
+    <option name="hiddenConfigurations">
+      <map>
+        <entry key="SpringBootApplicationConfigurationType">
+          <value>
+            <set>
+              <option value="OrderApplication" />
+            </set>
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
-  <component name="RunManager" selected="Spring Boot.UserApplication">
+  <component name="RunManager" selected="Spring Boot.OrderApplication">
     <configuration default="true" type="JetRunConfigurationType">
       <module name="XShop" />
       <method v="2">
@@ -155,7 +157,6 @@
     <configuration name="OrderApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
       <module name="order-service" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="org.michael.order.OrderApplication" />
-      <option name="VM_PARAMETERS" value="-Dhttp.nonProxyHosts=&quot;localhost|127.*|192.168.2.*&quot;" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="org.michael.order.*" />
@@ -182,7 +183,6 @@
     <configuration name="UserApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
       <module name="user-service" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="org.michael.user.UserApplication" />
-      <option name="VM_PARAMETERS" value="-Dhttp.nonProxyHosts=&quot;localhost|127.*|192.168.2.*&quot;" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="org.michael.user.*" />
@@ -202,11 +202,11 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Spring Boot.OrderApplication" />
-        <item itemvalue="Spring Boot.UserApplication" />
-        <item itemvalue="Spring Boot.CartApplication" />
-        <item itemvalue="Spring Boot.InventoryApplication" />
         <item itemvalue="Spring Boot.ProductApplication" />
+        <item itemvalue="Spring Boot.InventoryApplication" />
+        <item itemvalue="Spring Boot.CartApplication" />
+        <item itemvalue="Spring Boot.UserApplication" />
+        <item itemvalue="Spring Boot.OrderApplication" />
       </list>
     </recent_temporary>
   </component>
@@ -245,7 +245,8 @@
       <workItem from="1790786236377" duration="9914000" />
       <workItem from="1790865504077" duration="1900000" />
       <workItem from="1790940889740" duration="29295000" />
-      <workItem from="1791134038816" duration="8388000" />
+      <workItem from="1791134038816" duration="10128000" />
+      <workItem from="1791170968908" duration="6232000" />
     </task>
     <servers />
   </component>
