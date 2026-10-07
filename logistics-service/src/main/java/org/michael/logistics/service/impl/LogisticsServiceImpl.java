@@ -18,6 +18,7 @@ import org.michael.logistics.mapper.LogisticsTrackMapper;
 import org.michael.logistics.pojo.Logistics;
 import org.michael.logistics.pojo.LogisticsTrack;
 import org.michael.logistics.service.LogisticsService;
+import org.michael.logistics.vo.InternalLogisticsVO;
 import org.michael.logistics.vo.LogisticsDetailVO;
 import org.michael.logistics.vo.LogisticsShipVO;
 import org.michael.logistics.vo.LogisticsTrackVO;
@@ -232,6 +233,27 @@ public class LogisticsServiceImpl implements LogisticsService {
                     return trackVO;
                 }).toList();
         vo.setTracks(trackVOS);
+        return vo;
+    }
+
+    @Override
+    public InternalLogisticsVO getInternalByOrderNo(String orderNo) {
+        Logistics logistics = logisticsMapper.selectOne(
+                new LambdaQueryWrapper<Logistics>()
+                        .eq(
+                                Logistics::getOrderNo,
+                                orderNo
+                        )
+        );
+        if (logistics == null) {
+            throw new BusinessException(ErrorCode.LOGISTICS_NOT_FOUND);
+        }
+        InternalLogisticsVO vo = new InternalLogisticsVO();
+        vo.setLogisticsNo(logistics.getLogisticsNo());
+        vo.setOrderNo(logistics.getOrderNo());
+        vo.setCarrier(logistics.getCarrier());
+        vo.setStatus(logistics.getStatus());
+        vo.setCurrentLocation(logistics.getCurrentLocation());
         return vo;
     }
 
