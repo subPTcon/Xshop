@@ -10,9 +10,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 @FeignClient(name = "order-service")
 public interface OrderClient {
 
-    @GetMapping("/internal/orders/{orderNo}")
-    Result<OrderDTO> getOrder(@PathVariable("orderNo") String orderNo);
-
     @PostMapping("/internal/orders/{orderNo}/shipped")
     Result<Boolean> markShipped(@PathVariable("orderNo") String orderNo);
 }

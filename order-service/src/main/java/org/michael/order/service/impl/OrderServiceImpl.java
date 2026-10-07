@@ -447,67 +447,6 @@ public class OrderServiceImpl implements OrderService {
         return vo;
     }
 
-//    @Override
-//    public Boolean markPaid(String orderNo, LocalDateTime payTime) {
-//        Order order = orderMapper.selectOne(
-//                new LambdaQueryWrapper<Order>()
-//                        .eq(
-//                                Order::getOrderNo,
-//                                orderNo
-//                        )
-//        );
-//        if (order == null) {
-//            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
-//        }
-//
-//        // 已经支付，重复通知直接成功
-//        if (OrderStatus.SHIPPED.getCode().equals(order.getStatus())) {
-//            return Boolean.TRUE;
-//        }
-//
-//        // 已取消等其他状态不能再支付
-//        if (!OrderStatus.PENDING_PAYMENT.getCode().equals(order.getStatus())) {
-//            throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
-//        }
-//
-//        int affected = orderMapper.update(
-//                null,
-//                new LambdaUpdateWrapper<Order>()
-//                        .eq(
-//                                Order::getOrderNo,
-//                                orderNo
-//                        )
-//                        .eq(
-//                                Order::getStatus,
-//                                OrderStatus.PENDING_PAYMENT.getCode()
-//                        )
-//                        .set(
-//                                Order::getStatus,
-//                                OrderStatus.PAID.getCode()
-//                        )
-//                        .set(
-//                                Order::getPayTime,
-//                                payTime
-//                        )
-//        );
-//        if (affected == 0) {
-//            // 有可能另一个支付回调已经完成
-//            Order latest = orderMapper.selectOne(
-//                    new LambdaQueryWrapper<Order>()
-//                            .eq(
-//                                    Order::getOrderNo,
-//                                    orderNo
-//                            )
-//            );
-//            if (latest != null && OrderStatus.PAID.getCode().equals(latest.getStatus())) {
-//                return Boolean.TRUE;
-//            }
-//            throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
-//        }
-//
-//        return Boolean.TRUE;
-//    }
-
     @Override
     public Boolean markShipped(String orderNo) {
         Order order = orderMapper.selectOne(
@@ -547,17 +486,6 @@ public class OrderServiceImpl implements OrderService {
                         )
         );
         if (affected == 0) {
-            Order latest = orderMapper.selectOne(
-                    new LambdaQueryWrapper<Order>()
-                            .eq(
-                                    Order::getOrderNo,
-                                    orderNo
-                            )
-            );
-            if (latest != null && OrderStatus.SHIPPED.getCode().equals(latest.getStatus())) {
-                return Boolean.TRUE;
-            }
-
             throw new BusinessException(ErrorCode.ORDER_STATUS_INVALID);
         }
 
