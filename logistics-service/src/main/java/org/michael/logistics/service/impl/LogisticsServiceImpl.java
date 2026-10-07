@@ -1,6 +1,7 @@
 package org.michael.logistics.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,16 +9,20 @@ import org.michael.common.exception.BusinessException;
 import org.michael.common.exception.ErrorCode;
 import org.michael.common.result.Result;
 import org.michael.logistics.client.OrderClient;
-import org.michael.logistics.client.dto.OrderDTO;
 import org.michael.logistics.dto.LogisticsShipDTO;
-import org.michael.logistics.enums.OrderStatus;
+import org.michael.logistics.dto.LogisticsUpdateDTO;
+import org.michael.logistics.enums.LogisticsStatus;
 import org.michael.logistics.mapper.LogisticsMapper;
 import org.michael.logistics.mapper.LogisticsTrackMapper;
 import org.michael.logistics.pojo.Logistics;
+import org.michael.logistics.pojo.LogisticsTrack;
 import org.michael.logistics.service.LogisticsService;
 import org.michael.logistics.vo.LogisticsShipVO;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -85,6 +90,78 @@ public class LogisticsServiceImpl implements LogisticsService {
         log.info("订单发货成功, orderNo={}, logisticsNo={}", dto.getOrderNo(), logisticsNo);
 
         return new LogisticsShipVO(logisticsNo, true);
+    }
+
+    @Override
+    @Transactional
+    public Boolean update(String logisticsNo, LogisticsUpdateDTO dto) {
+        /**
+         * 1.查询物流单
+         */
+        Logistics logistics = logisticsMapper.selectOne(
+                new LambdaQueryWrapper<Logistics>()
+                        .eq(
+                                Logistics::getLogisticsNo,
+                                logisticsNo
+                        )
+        );
+        if (logistics == null) {
+            throw new BusinessException(ErrorCode.LOGISTICS_NOT_FOUND);
+        }
+
+        /**
+         * 2.重复更新，直接成功
+         */
+        if (dto.getStatus().equals(logistics.getStatus())) {
+            return Boolean.TRUE;
+        }
+
+        /**
+         * 3.校验状态流转
+         */
+        if (!LogisticsStatus.canTransit(logistics.getStatus(), dto.getStatus())) {
+            throw new BusinessException(ErrorCode.LOGISTICS_STATUS_INVALID);
+        }
+
+        /**
+         * 4.条件更新物流主表
+         */
+        int affected = logisticsMapper.update(
+                null,
+                new LambdaUpdateWrapper<Logistics>()
+                        .eq(
+                                Logistics::getLogisticsNo,
+                                logisticsNo
+                        )
+                        .eq(
+                                Logistics::getStatus,
+                                logistics.getStatus()
+                        )
+                        .set(
+                                Logistics::getStatus,
+                                dto.getStatus()
+                        )
+                        .set(
+                                Logistics::getCurrentLocation,
+                                dto.getLocation()
+                        )
+        );
+
+        if (affected == 0) {
+            throw new BusinessException(ErrorCode.LOGISTICS_STATUS_INVALID);
+        }
+
+        /**
+         * 5.新增物流轨迹
+         */
+        LogisticsTrack track = new LogisticsTrack();
+        track.setLogisticsNo(logisticsNo);
+        track.setLocation(dto.getLocation());
+        track.setDescription(dto.getDescription());
+        track.setTrackTime(LocalDateTime.now());
+        logisticsTrackMapper.insert(track);
+
+        return Boolean.TRUE;
     }
 
     private void notifyOrderShipped(String orderNo) {

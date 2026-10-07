@@ -15,4 +15,8 @@ public enum LogisticsStatus {
     private final Integer code;
 
     private final String description;
+
+    public static boolean canTransit(Integer current, Integer target) {
+        return (SHIPPED.code.equals(current) && IN_TRANSIT.code.equals(target)) || (IN_TRANSIT.code.equals(current) && DELIVERED.code.equals(target));
+    }
 }
