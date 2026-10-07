@@ -9,6 +9,7 @@ import org.michael.common.exception.BusinessException;
 import org.michael.common.exception.ErrorCode;
 import org.michael.common.result.Result;
 import org.michael.logistics.client.OrderClient;
+import org.michael.logistics.client.dto.OrderDTO;
 import org.michael.logistics.dto.LogisticsShipDTO;
 import org.michael.logistics.dto.LogisticsUpdateDTO;
 import org.michael.logistics.enums.LogisticsStatus;
@@ -17,12 +18,15 @@ import org.michael.logistics.mapper.LogisticsTrackMapper;
 import org.michael.logistics.pojo.Logistics;
 import org.michael.logistics.pojo.LogisticsTrack;
 import org.michael.logistics.service.LogisticsService;
+import org.michael.logistics.vo.LogisticsDetailVO;
 import org.michael.logistics.vo.LogisticsShipVO;
+import org.michael.logistics.vo.LogisticsTrackVO;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -162,6 +166,73 @@ public class LogisticsServiceImpl implements LogisticsService {
         logisticsTrackMapper.insert(track);
 
         return Boolean.TRUE;
+    }
+
+    @Override
+    public LogisticsDetailVO getByOrderNo(Long userId, String orderNo) {
+        /**
+         * 1.先向 order-service 查询订单
+         */
+        Result<OrderDTO> orderResult = orderClient.getOrder(orderNo);
+        if (orderResult == null || orderResult.getData() == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+        OrderDTO order = orderResult.getData();
+
+        /**
+         * 2.校验订单归属
+         */
+        if (!userId.equals(order.getUserId())) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+
+        /**
+         * 3.查询物流单
+         */
+        Logistics logistics = logisticsMapper.selectOne(
+                new LambdaQueryWrapper<Logistics>()
+                        .eq(
+                                Logistics::getOrderNo,
+                                orderNo
+                        )
+        );
+        if (logistics == null) {
+            throw new BusinessException(ErrorCode.LOGISTICS_NOT_FOUND);
+        }
+
+        /**
+         * 4.查询物流轨迹
+         */
+        List<LogisticsTrack> tracks = logisticsTrackMapper.selectList(
+                new LambdaQueryWrapper<LogisticsTrack>()
+                        .eq(
+                                LogisticsTrack::getLogisticsNo,
+                                logistics.getLogisticsNo()
+                        )
+                        .orderByAsc(
+                                LogisticsTrack::getTrackTime
+                        )
+        );
+
+        /**
+         * 5.组装返回
+         */
+        LogisticsDetailVO vo = new LogisticsDetailVO();
+        vo.setLogisticsNo(logistics.getLogisticsNo());
+        vo.setOrderNo(logistics.getOrderNo());
+        vo.setCarrier(logistics.getCarrier());
+        vo.setStatus(logistics.getStatus());
+        vo.setCurrentLocation(logistics.getCurrentLocation());
+        List<LogisticsTrackVO> trackVOS = tracks.stream()
+                .map(track -> {
+                    LogisticsTrackVO trackVO = new LogisticsTrackVO();
+                    trackVO.setLocation(track.getLocation());
+                    trackVO.setDescription(track.getDescription());
+                    trackVO.setTrackTime(track.getTrackTime());
+                    return trackVO;
+                }).toList();
+        vo.setTracks(trackVOS);
+        return vo;
     }
 
     private void notifyOrderShipped(String orderNo) {

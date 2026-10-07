@@ -12,4 +12,7 @@ public interface OrderClient {
 
     @PostMapping("/internal/orders/{orderNo}/shipped")
     Result<Boolean> markShipped(@PathVariable("orderNo") String orderNo);
+
+    @GetMapping("/internal/orders/{orderNo}")
+    Result<OrderDTO> getOrder(@PathVariable("orderNo") String orderNo);
 }

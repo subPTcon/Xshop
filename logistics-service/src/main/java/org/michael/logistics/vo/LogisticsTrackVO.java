@@ -7,8 +7,6 @@ import java.time.LocalDateTime;
 @Data
 public class LogisticsTrackVO {
 
-    private Integer status;
-
     private String location;
 
     private String description;
