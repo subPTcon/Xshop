@@ -37,7 +37,7 @@ public enum ErrorCode {
     ORDER_NOT_FOUND(40440, "订单不存在"),
     PAYMENT_NOT_FOUND(40450, "支付单不存在"),
     LOGISTICS_NOT_FOUND(40460, "物流信息不存在"),
-    LOGISTICS_STATUS_INVALID(40960, "物流状态不允许执行该操作"),
+    NOTIFICATION_NOT_FOUND(40470, "消息通知不存在"),
 
     // 409xx 业务冲突类
     USERNAME_EXISTS(40900, "该用户名已被注册"),
@@ -64,6 +64,7 @@ public enum ErrorCode {
     PAYMENT_CREATE_CONFLICT(40950, "支付单创建冲突"),
     PAYMENT_STATUS_INVALID(40951, "当前支付状态不允许执行该操作"),
     PAYMENT_AMOUNT_INVALID(40952, "支付金额不一致"),
+    LOGISTICS_STATUS_INVALID(40960, "物流状态不允许执行该操作"),
 
     // 500xx 系统错误类
     SYSTEM_ERROR(50000, "系统繁忙，请稍后重试"),

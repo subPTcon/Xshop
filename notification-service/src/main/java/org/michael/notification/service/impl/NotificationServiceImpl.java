@@ -1,8 +1,11 @@
 package org.michael.notification.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
+import org.michael.common.exception.BusinessException;
+import org.michael.common.exception.ErrorCode;
 import org.michael.notification.mapper.NotificationMapper;
 import org.michael.notification.pojo.Notification;
 import org.michael.notification.service.NotificationService;
@@ -10,6 +13,7 @@ import org.michael.notification.vo.NotificationPageVO;
 import org.michael.notification.vo.NotificationVO;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -65,6 +69,34 @@ public class NotificationServiceImpl implements NotificationService {
                         .eq(Notification::getUserId, userId)
                         .eq(Notification::getIsRead, 0)
         );
+    }
 
+    @Override
+    public Boolean markAsRead(Long userId, Long notificationId) {
+        Notification notification = notificationMapper.selectOne(
+            new LambdaQueryWrapper<Notification>()
+                    .eq(Notification::getId, notificationId)
+                    .eq(Notification::getUserId, userId)
+        );
+        if (notification == null) {
+            throw new BusinessException(ErrorCode.NOTIFICATION_NOT_FOUND);
+        }
+
+        // 已经读过了，直接返回，保证幂等
+        if (Integer.valueOf(1).equals(notification.getIsRead())) {
+            return Boolean.TRUE;
+        }
+
+        int affected = notificationMapper.update(
+                null,
+                new LambdaUpdateWrapper<Notification>()
+                        .eq(Notification::getId, notificationId)
+                        .eq(Notification::getUserId, userId)
+                        .eq(Notification::getIsRead, 0)
+                        .set(Notification::getIsRead, 1)
+                        .set(Notification::getReadTime, LocalDateTime.now())
+        );
+
+        return affected > 0;
     }
 }

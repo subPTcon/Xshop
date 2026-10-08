@@ -6,10 +6,7 @@ import org.michael.common.context.UserContext;
 import org.michael.common.result.Result;
 import org.michael.notification.service.NotificationService;
 import org.michael.notification.vo.NotificationPageVO;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -42,4 +39,10 @@ public class NotificationController {
         return Result.ok(notificationService.getUnreadCount(userId));
     }
 
+    @PutMapping("/{id}/read")
+    public Result<Boolean> markAsRead(@PathVariable Long id) {
+        log.info("PUT /notifications/{id}/read id={}", id);
+        Long userId = UserContext.getUserId();
+        return Result.ok(notificationService.markAsRead(userId, id));
+    }
 }
