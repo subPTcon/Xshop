@@ -20,6 +20,7 @@ import org.michael.order.dto.OrderCancelDTO;
 import org.michael.order.dto.OrderCreateDTO;
 import org.michael.order.dto.OrderItemCreateDTO;
 import org.michael.order.enums.OrderStatus;
+import org.michael.order.event.OrderCancelledEvent;
 import org.michael.order.event.OrderCreatedEvent;
 import org.michael.order.event.OrderEventProducer;
 import org.michael.order.mapper.OrderItemMapper;
@@ -291,6 +292,14 @@ public class OrderServiceImpl implements OrderService {
                         Order::getCancelReason,
                         dto.getReason()
                 );
+        OrderCancelledEvent event = new OrderCancelledEvent(
+                UUID.randomUUID().toString(),
+                order.getOrderNo(),
+                order.getUserId(),
+                dto.getReason()
+        );
+        orderEventProducer.sendOrderCancelled(event);
+
         int affected = orderMapper.update(null, wrapper);
 
         // 5.affected = 0 说明发生了并发状态变化

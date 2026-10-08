@@ -38,7 +38,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
       properties:
-        spring.json.type.mapping: orderCreated:org.michael.order.event.OrderCreatedEvent
+        spring.json.type.mapping: "orderCreated:org.michael.order.event.OrderCreatedEvent,orderCancelled:org.michael.order.event.OrderCancelledEvent"
 
 mybatis-plus:
   configuration:
