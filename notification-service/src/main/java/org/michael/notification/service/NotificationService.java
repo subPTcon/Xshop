@@ -9,4 +9,6 @@ public interface NotificationService {
     Long getUnreadCount(Long userId);
 
     Boolean markAsRead(Long userId, Long notificationId);
+
+    Boolean markAllAsRead(Long userId);
 }

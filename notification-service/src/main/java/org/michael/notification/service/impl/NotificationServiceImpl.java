@@ -99,4 +99,19 @@ public class NotificationServiceImpl implements NotificationService {
 
         return affected > 0;
     }
+
+    @Override
+    public Boolean markAllAsRead(Long userId) {
+        LocalDateTime now = LocalDateTime.now();
+        notificationMapper.update(
+                null,
+                new LambdaUpdateWrapper<Notification>()
+                        .eq(Notification::getUserId, userId)
+                        .eq(Notification::getIsRead, 0)
+                        .set(Notification::getIsRead, 1)
+                        .set(Notification::getReadTime, now)
+        );
+
+        return Boolean.TRUE;
+    }
 }
