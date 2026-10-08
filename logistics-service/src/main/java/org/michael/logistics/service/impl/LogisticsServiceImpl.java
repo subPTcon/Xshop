@@ -13,6 +13,8 @@ import org.michael.logistics.client.dto.OrderDTO;
 import org.michael.logistics.dto.LogisticsShipDTO;
 import org.michael.logistics.dto.LogisticsUpdateDTO;
 import org.michael.logistics.enums.LogisticsStatus;
+import org.michael.logistics.event.LogisticsEventProducer;
+import org.michael.logistics.event.LogisticsStatusChangedEvent;
 import org.michael.logistics.mapper.LogisticsMapper;
 import org.michael.logistics.mapper.LogisticsTrackMapper;
 import org.michael.logistics.pojo.Logistics;
@@ -28,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -39,7 +42,10 @@ public class LogisticsServiceImpl implements LogisticsService {
     private final LogisticsTrackMapper logisticsTrackMapper;
 
     private final OrderClient orderClient;
+
     private final LogisticsPersistenceService logisticsPersistenceService;
+
+    private final LogisticsEventProducer logisticsEventProducer;
 
     @Override
     public LogisticsShipVO ship(LogisticsShipDTO dto) {
@@ -71,6 +77,7 @@ public class LogisticsServiceImpl implements LogisticsService {
              * 创建物流单 + 第一条轨迹
              */
             logisticsPersistenceService.createShipment(dto, logisticsNo);
+
         } catch (DuplicateKeyException e) {
             /**
              * 并发请求兜底
@@ -165,6 +172,23 @@ public class LogisticsServiceImpl implements LogisticsService {
         track.setDescription(dto.getDescription());
         track.setTrackTime(LocalDateTime.now());
         logisticsTrackMapper.insert(track);
+
+        Result<OrderDTO> orderResult = orderClient.getOrder(logistics.getOrderNo());
+        if (orderResult == null || orderResult.getData() == null) {
+            throw new BusinessException(ErrorCode.REMOTE_SERVICE_ERROR);
+        }
+        OrderDTO order = orderResult.getData();
+
+        LogisticsStatusChangedEvent event = new LogisticsStatusChangedEvent(
+                UUID.randomUUID().toString(),
+                logistics.getLogisticsNo(),
+                logistics.getOrderNo(),
+                order.getUserId(),
+                dto.getStatus(),
+                dto.getLocation(),
+                dto.getDescription()
+        );
+        logisticsEventProducer.sendLogisticsStatusChanged(event);
 
         return Boolean.TRUE;
     }

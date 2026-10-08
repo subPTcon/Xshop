@@ -19,6 +19,16 @@ spring:
       timeout: 3000ms
       password: redis123456
 
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+      properties:
+        spring.json.type.mapping: logisticsStatusChanged:org.michael.logistics.event.LogisticsStatusChangedEvent
+
   cloud:
     nacos:
       discovery:

@@ -10,10 +10,11 @@ import org.michael.common.exception.ErrorCode;
 import org.michael.common.result.Result;
 import org.michael.payment.client.OrderClient;
 import org.michael.payment.client.dto.OrderDTO;
-import org.michael.payment.client.dto.OrderPaidRequest;
 import org.michael.payment.dto.PaymentCallbackDTO;
 import org.michael.payment.dto.PaymentCreateDTO;
 import org.michael.payment.enums.PaymentStatus;
+import org.michael.payment.event.PaymentEventProducer;
+import org.michael.payment.event.PaymentSuccessEvent;
 import org.michael.payment.mapper.PaymentMapper;
 import org.michael.payment.pojo.Payment;
 import org.michael.payment.service.PaymentService;
@@ -23,6 +24,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -34,6 +36,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final OrderClient orderClient;
 
     private static final String MOCK_SIGN = "xshop-mock-sign";
+
+    private final PaymentEventProducer paymentEventProducer;
 
     @Override
     public PaymentCreateVO createPayment(Long userId, PaymentCreateDTO dto) {
@@ -193,6 +197,15 @@ public class PaymentServiceImpl implements PaymentService {
          * 这里仍然重新通知order-service
          */
         notifyOrderPaymentSuccess(payment.getOrderNo());
+
+        PaymentSuccessEvent event = new PaymentSuccessEvent(
+                UUID.randomUUID().toString(),
+                payment.getPaymentNo(),
+                payment.getOrderNo(),
+                payment.getUserId(),
+                payment.getAmount()
+        );
+        paymentEventProducer.sendPaymentSuccess(event);
 
         return Boolean.TRUE;
     }

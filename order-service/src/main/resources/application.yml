@@ -37,6 +37,9 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
+      properties:
+        spring.json.type.mapping: orderCreated:org.michael.order.event.OrderCreatedEvent
+
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
