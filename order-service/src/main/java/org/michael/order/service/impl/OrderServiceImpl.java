@@ -20,6 +20,8 @@ import org.michael.order.dto.OrderCancelDTO;
 import org.michael.order.dto.OrderCreateDTO;
 import org.michael.order.dto.OrderItemCreateDTO;
 import org.michael.order.enums.OrderStatus;
+import org.michael.order.event.OrderCreatedEvent;
+import org.michael.order.event.OrderEventProducer;
 import org.michael.order.mapper.OrderItemMapper;
 import org.michael.order.mapper.OrderMapper;
 import org.michael.order.pojo.Order;
@@ -45,20 +47,15 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderMapper orderMapper;
-
     private final OrderItemMapper orderItemMapper;
-
     private final StringRedisTemplate redisTemplate;
-
     private final UserClient userClient;
-
     private final ProductClient productClient;
-
     private final InventoryClient inventoryClient;
-
     private final CartClient cartClient;
     private final OrderPersistenceService orderPersistenceService;
     private final OrderStateMachine orderStateMachine;
+    private final OrderEventProducer orderEventProducer;
 
     @Override
     public OrderCreateVO createOrder(Long userId, OrderCreateDTO dto) {
@@ -96,6 +93,15 @@ public class OrderServiceImpl implements OrderService {
 
             // 10.本地事务保存订单
             orderPersistenceService.saveOrder(order, orderItems);
+
+            OrderCreatedEvent event = new OrderCreatedEvent(
+                    UUID.randomUUID().toString(),
+                    orderNo,
+                    userId,
+                    totalAmount
+            );
+
+            orderEventProducer.sendOrderCreated(event);
 
         } catch (Exception e) {
             /**
