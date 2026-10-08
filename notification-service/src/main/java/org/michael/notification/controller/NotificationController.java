@@ -35,4 +35,11 @@ public class NotificationController {
         return Result.ok(notificationService.getNotifications(userId, page, size, isRead));
     }
 
+    @GetMapping("/unread-count")
+    public Result<Long> unreadCount() {
+        log.info("GET /notifications/unread-count");
+        Long userId = UserContext.getUserId();
+        return Result.ok(notificationService.getUnreadCount(userId));
+    }
+
 }

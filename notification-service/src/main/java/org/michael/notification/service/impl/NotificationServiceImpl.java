@@ -57,4 +57,14 @@ public class NotificationServiceImpl implements NotificationService {
                 }).toList();
         return new NotificationPageVO(list, result.getTotal());
     }
+
+    @Override
+    public Long getUnreadCount(Long userId) {
+        return notificationMapper.selectCount(
+                new LambdaQueryWrapper<Notification>()
+                        .eq(Notification::getUserId, userId)
+                        .eq(Notification::getIsRead, 0)
+        );
+
+    }
 }
